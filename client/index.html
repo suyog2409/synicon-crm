@@ -3,156 +3,4270 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SYNICON IT SOLUTIONS — CRM</title>
+
+  <title>SYNICON IT SOLUTIONS — CRM & ERP</title>
+
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Excel Export -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+  <!-- PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
+
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .sidebar-btn {
+      transition: all 0.2s ease;
+    }
+
+    .sidebar-btn:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    .sidebar-btn.active {
+      background: #2563eb;
+      color: white;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      box-shadow: 0 4px 15px rgba(15,23,42,0.04);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      min-width: 850px;
+    }
+
+    .modal-bg {
+      background: rgba(15,23,42,0.65);
+      backdrop-filter: blur(3px);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .toast {
+      animation: slideIn 0.25s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .mobile-sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+    }
+
+    .mobile-sidebar.open {
+      transform: translateX(0);
+    }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
 
-<!-- LOGIN -->
-<div id="login-screen" class="min-h-screen flex items-center justify-center bg-slate-900 p-4">
-  <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-8">
-    <div class="text-center mb-7">
-      <div class="text-3xl font-black text-blue-700">SYNICON</div>
-      <div class="text-sm text-slate-500">IT SOLUTIONS CRM</div>
+<body class="bg-slate-100 text-slate-800">
+
+<!-- ========================================================= -->
+<!-- LOGIN SCREEN -->
+<!-- ========================================================= -->
+
+<div id="login-screen" class="min-h-screen flex items-center justify-center bg-slate-950 px-4">
+
+  <div class="w-full max-w-md">
+
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 text-white text-2xl font-black shadow-lg">
+        S
+      </div>
+
+      <h1 class="text-3xl font-black text-white mt-4">
+        SYNICON
+      </h1>
+
+      <p class="text-slate-400 text-sm mt-1">
+        IT SOLUTIONS
+      </p>
     </div>
-    <form onsubmit="login(event)" class="space-y-4">
-      <div><label class="text-sm font-semibold">Username</label><input id="login-user" required autocomplete="username" class="mt-1 w-full border rounded-lg p-3" placeholder="Username"></div>
-      <div><label class="text-sm font-semibold">Password</label><input id="login-pass" required type="password" autocomplete="current-password" class="mt-1 w-full border rounded-lg p-3" placeholder="Password"></div>
-      <div id="login-error" class="hidden bg-red-100 text-red-700 p-3 rounded-lg text-sm"></div>
-      <button class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold p-3 rounded-lg">Login</button>
-    </form>
-    <p class="text-xs text-center text-slate-400 mt-5">Private Admin CRM</p>
+
+    <div class="bg-white rounded-2xl shadow-2xl p-7">
+
+      <h2 class="text-xl font-bold text-slate-900">
+        Admin Login
+      </h2>
+
+      <p class="text-sm text-slate-500 mt-1 mb-6">
+        Sign in to access your CRM & ERP
+      </p>
+
+      <form id="login-form" onsubmit="login(event)" class="space-y-4">
+
+        <div>
+          <label class="block text-sm font-semibold mb-1">
+            Username
+          </label>
+
+          <input
+            id="login-username"
+            type="text"
+            autocomplete="username"
+            required
+            class="w-full border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter username"
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold mb-1">
+            Password
+          </label>
+
+          <input
+            id="login-password"
+            type="password"
+            autocomplete="current-password"
+            required
+            class="w-full border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter password"
+          >
+        </div>
+
+        <div id="login-error"
+             class="hidden bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+        </div>
+
+        <button
+          id="login-button"
+          type="submit"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition"
+        >
+          Sign In
+        </button>
+
+      </form>
+
+      <p class="text-center text-xs text-slate-400 mt-6">
+        SYNICON CRM & ERP
+      </p>
+
+    </div>
+
   </div>
 </div>
 
-<!-- APP -->
+
+<!-- ========================================================= -->
+<!-- MAIN APPLICATION -->
+<!-- ========================================================= -->
+
 <div id="app" class="hidden min-h-screen">
-  <div class="flex min-h-screen">
-    <aside class="w-64 bg-slate-900 text-white p-5 flex flex-col justify-between shrink-0">
-      <div>
-        <div class="mb-8"><div class="text-xl font-bold text-blue-400">SYNICON</div><div class="text-xs text-slate-400">IT Solutions CRM</div></div>
-        <nav class="space-y-2">
-          <button onclick="showTab('dashboard')" class="nav-btn w-full text-left px-3 py-2 rounded bg-blue-700">Dashboard</button>
-          <button onclick="showTab('leads')" class="nav-btn w-full text-left px-3 py-2 rounded text-slate-300 hover:bg-slate-800">Leads / CRM</button>
-          <button onclick="showTab('clients')" class="nav-btn w-full text-left px-3 py-2 rounded text-slate-300 hover:bg-slate-800">Clients</button>
-          <button onclick="showTab('projects')" class="nav-btn w-full text-left px-3 py-2 rounded text-slate-300 hover:bg-slate-800">Projects</button>
-          <button onclick="showTab('invoices')" class="nav-btn w-full text-left px-3 py-2 rounded text-slate-300 hover:bg-slate-800">Invoices</button>
-        </nav>
-      </div>
-      <div>
-        <button onclick="logout()" class="w-full border border-slate-700 hover:bg-slate-800 text-slate-300 px-3 py-2 rounded-lg text-sm mb-4">Logout</button>
-        <div class="text-xs text-slate-500">SYNICON CRM v3.0</div>
-      </div>
-    </aside>
 
-    <main class="flex-1 p-5 md:p-8 overflow-y-auto">
-      <div class="flex flex-wrap justify-between items-center gap-3 mb-5">
-        <div><h1 id="page-title" class="text-2xl font-bold">Agency Overview</h1><p class="text-xs text-slate-500">Manage leads, clients, projects and invoices</p></div>
-        <div id="message" class="hidden px-4 py-2 rounded-lg text-sm"></div>
+  <!-- MOBILE SIDEBAR OVERLAY -->
+  <div
+    id="mobile-overlay"
+    onclick="closeMobileSidebar()"
+    class="hidden fixed inset-0 bg-slate-950/50 z-40"
+  ></div>
+
+  <!-- SIDEBAR -->
+  <aside
+    id="sidebar"
+    class="fixed z-50 left-0 top-0 bottom-0 w-64 bg-slate-950 text-white flex flex-col"
+  >
+
+    <div class="px-5 py-5 border-b border-slate-800">
+
+      <div class="flex items-center gap-3">
+
+        <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-black text-lg">
+          S
+        </div>
+
+        <div>
+          <div class="font-black tracking-wide">
+            SYNICON
+          </div>
+
+          <div class="text-[10px] text-slate-400 tracking-widest">
+            CRM & ERP
+          </div>
+        </div>
+
       </div>
 
+    </div>
+
+
+    <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+
+      <button
+        onclick="showPage('dashboard')"
+        data-page="dashboard"
+        class="sidebar-btn active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-left"
+      >
+        <span>📊</span>
+        Dashboard
+      </button>
+
+      <button
+        onclick="showPage('leads')"
+        data-page="leads"
+        class="sidebar-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-left"
+      >
+        <span>🎯</span>
+        Leads
+      </button>
+
+      <button
+        onclick="showPage('followups')"
+        data-page="followups"
+        class="sidebar-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-left"
+      >
+        <span>📅</span>
+        Follow-ups
+      </button>
+
+      <button
+        onclick="showPage('clients')"
+        data-page="clients"
+        class="sidebar-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-left"
+      >
+        <span>👥</span>
+        Clients
+      </button>
+
+      <button
+        onclick="showPage('projects')"
+        data-page="projects"
+        class="sidebar-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-left"
+      >
+        <span>📁</span>
+        Projects
+      </button>
+
+      <button
+        onclick="showPage('invoices')"
+        data-page="invoices"
+        class="sidebar-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-left"
+      >
+        <span>🧾</span>
+        Invoices
+      </button>
+
+    </nav>
+
+
+    <div class="p-4 border-t border-slate-800">
+
+      <div class="text-xs text-slate-500 mb-3">
+        SYNICON IT SOLUTIONS
+      </div>
+
+      <button
+        onclick="logout()"
+        class="w-full px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-semibold"
+      >
+        🚪 Logout
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <!-- MAIN -->
+  <main class="ml-64 min-h-screen">
+
+    <!-- TOPBAR -->
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200">
+
+      <div class="px-5 md:px-7 py-4 flex items-center justify-between gap-4">
+
+        <div class="flex items-center gap-3">
+
+          <button
+            onclick="openMobileSidebar()"
+            class="lg:hidden w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center"
+          >
+            ☰
+          </button>
+
+          <div>
+            <h1 id="page-title" class="text-xl md:text-2xl font-black text-slate-900">
+              Dashboard
+            </h1>
+
+            <p id="page-subtitle" class="text-xs md:text-sm text-slate-500">
+              Overview of your business
+            </p>
+          </div>
+
+        </div>
+
+
+        <div class="flex items-center gap-3">
+
+          <button
+            onclick="loadAllData()"
+            title="Refresh"
+            class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center"
+          >
+            ↻
+          </button>
+
+          <div class="hidden sm:block text-right">
+            <div class="text-xs text-slate-400">
+              Logged in as
+            </div>
+
+            <div class="text-sm font-bold">
+              Admin
+            </div>
+          </div>
+
+          <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
+            A
+          </div>
+
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- CONTENT -->
+    <div class="p-4 md:p-7">
+
+
+      <!-- ===================================================== -->
       <!-- DASHBOARD -->
-      <section id="tab-dashboard" class="space-y-6">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="bg-white p-5 rounded-xl border shadow-sm"><span class="text-xs font-semibold text-slate-500">TOTAL LEADS</span><p id="stat-leads" class="text-2xl font-black mt-2">0</p></div>
-          <div class="bg-white p-5 rounded-xl border shadow-sm"><span class="text-xs font-semibold text-slate-500">CLIENTS</span><p id="stat-clients" class="text-2xl font-black mt-2">0</p></div>
-          <div class="bg-white p-5 rounded-xl border shadow-sm"><span class="text-xs font-semibold text-slate-500">ACTIVE PROJECTS</span><p id="stat-projects" class="text-2xl font-black mt-2">0</p></div>
-          <div class="bg-white p-5 rounded-xl border shadow-sm"><span class="text-xs font-semibold text-slate-500">TOTAL REVENUE</span><p id="stat-revenue" class="text-2xl font-black text-emerald-600 mt-2">₹0</p></div>
+      <!-- ===================================================== -->
+
+      <section id="page-dashboard" class="page-section">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
+
+          <div class="card p-5">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-slate-500">Total Leads</span>
+              <span class="text-xl">🎯</span>
+            </div>
+
+            <div id="stat-leads" class="text-3xl font-black mt-3">
+              0
+            </div>
+
+            <div class="text-xs text-slate-400 mt-1">
+              All leads
+            </div>
+          </div>
+
+
+          <div class="card p-5">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-slate-500">Clients</span>
+              <span class="text-xl">👥</span>
+            </div>
+
+            <div id="stat-clients" class="text-3xl font-black mt-3">
+              0
+            </div>
+
+            <div class="text-xs text-slate-400 mt-1">
+              Converted & added clients
+            </div>
+          </div>
+
+
+          <div class="card p-5">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-slate-500">Active Projects</span>
+              <span class="text-xl">📁</span>
+            </div>
+
+            <div id="stat-projects" class="text-3xl font-black mt-3">
+              0
+            </div>
+
+            <div class="text-xs text-slate-400 mt-1">
+              Currently active
+            </div>
+          </div>
+
+
+          <div class="card p-5">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-slate-500">Revenue</span>
+              <span class="text-xl">💰</span>
+            </div>
+
+            <div id="stat-revenue" class="text-2xl font-black mt-3">
+              ₹0
+            </div>
+
+            <div class="text-xs text-slate-400 mt-1">
+              Invoice total
+            </div>
+          </div>
+
+
+          <div class="card p-5">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-slate-500">Follow-ups</span>
+              <span class="text-xl">📅</span>
+            </div>
+
+            <div id="stat-followups" class="text-3xl font-black mt-3">
+              0
+            </div>
+
+            <div class="text-xs text-slate-400 mt-1">
+              Pending follow-ups
+            </div>
+          </div>
+
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-white p-5 rounded-xl border"><div class="text-xs text-slate-500">NEW LEADS</div><div id="stat-new" class="text-2xl font-bold mt-2">0</div></div>
-          <div class="bg-white p-5 rounded-xl border"><div class="text-xs text-slate-500">FOLLOW-UPS</div><div id="stat-follow" class="text-2xl font-bold mt-2">0</div></div>
-          <div class="bg-white p-5 rounded-xl border"><div class="text-xs text-slate-500">PENDING INVOICES</div><div id="stat-pending" class="text-2xl font-bold mt-2">0</div></div>
+
+
+        <!-- QUICK ACTIONS -->
+
+        <div class="card p-5 mb-6">
+
+          <div class="flex items-center justify-between mb-4">
+
+            <div>
+              <h2 class="font-black text-lg">
+                Quick Actions
+              </h2>
+
+              <p class="text-sm text-slate-500">
+                Manage your business faster
+              </p>
+            </div>
+
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+
+            <button
+              onclick="openLeadModal()"
+              class="p-4 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-bold"
+            >
+              ➕ New Lead
+            </button>
+
+            <button
+              onclick="openClientModal()"
+              class="p-4 rounded-xl bg-green-50 hover:bg-green-100 text-green-700 text-sm font-bold"
+            >
+              👤 New Client
+            </button>
+
+            <button
+              onclick="openProjectModal()"
+              class="p-4 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 text-sm font-bold"
+            >
+              📁 New Project
+            </button>
+
+            <button
+              onclick="openInvoiceModal()"
+              class="p-4 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 text-sm font-bold"
+            >
+              🧾 New Invoice
+            </button>
+
+            <button
+              onclick="exportAllExcel()"
+              class="p-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold"
+            >
+              📊 Export Excel
+            </button>
+
+          </div>
+
         </div>
+
+
+        <!-- DASHBOARD LOWER -->
+
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+          <!-- FOLLOW UPS -->
+
+          <div class="card">
+
+            <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+
+              <div>
+                <h2 class="font-black text-lg">
+                  Upcoming Follow-ups
+                </h2>
+
+                <p class="text-sm text-slate-500">
+                  Leads requiring attention
+                </p>
+              </div>
+
+              <button
+                onclick="showPage('followups')"
+                class="text-sm font-bold text-blue-600"
+              >
+                View All
+              </button>
+
+            </div>
+
+            <div id="dashboard-followups" class="divide-y divide-slate-100">
+              <div class="p-6 text-center text-slate-400">
+                Loading...
+              </div>
+            </div>
+
+          </div>
+
+
+          <!-- RECENT LEADS -->
+
+          <div class="card">
+
+            <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+
+              <div>
+                <h2 class="font-black text-lg">
+                  Recent Leads
+                </h2>
+
+                <p class="text-sm text-slate-500">
+                  Latest enquiries
+                </p>
+              </div>
+
+              <button
+                onclick="showPage('leads')"
+                class="text-sm font-bold text-blue-600"
+              >
+                View All
+              </button>
+
+            </div>
+
+            <div id="dashboard-leads" class="divide-y divide-slate-100">
+              <div class="p-6 text-center text-slate-400">
+                Loading...
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
       </section>
 
+
+      <!-- ===================================================== -->
       <!-- LEADS -->
-      <section id="tab-leads" class="hidden space-y-5">
-        <div class="flex flex-wrap justify-between items-center gap-3"><h2 class="text-xl font-bold">Leads Pipeline</h2><button onclick="prepareAddLead()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">+ Add Lead</button></div>
-        <div class="bg-white border rounded-xl p-3"><input id="lead-search" oninput="renderLeads()" class="w-full border rounded-lg p-2" placeholder="Search name, company, phone or service..."></div>
-        <div class="bg-white border rounded-xl overflow-auto"><table class="min-w-full text-sm"><thead class="bg-slate-50"><tr><th class="p-3 text-left">Prospect</th><th class="p-3 text-left">Phone</th><th class="p-3 text-left">Service</th><th class="p-3 text-left">Value</th><th class="p-3 text-left">Status</th><th class="p-3 text-left">Follow-up</th><th class="p-3 text-right">Action</th></tr></thead><tbody id="leads-table-body"></tbody></table></div>
+      <!-- ===================================================== -->
+
+      <section id="page-leads" class="page-section hidden">
+
+        <div class="card">
+
+          <div class="p-5 border-b border-slate-200">
+
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+
+              <div>
+                <h2 class="text-lg font-black">
+                  Leads / CRM
+                </h2>
+
+                <p class="text-sm text-slate-500">
+                  Manage enquiries and sales pipeline
+                </p>
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+
+                <button
+                  onclick="exportLeadsExcel()"
+                  class="px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-bold"
+                >
+                  📊 Excel
+                </button>
+
+                <button
+                  onclick="openLeadModal()"
+                  class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold"
+                >
+                  + Add Lead
+                </button>
+
+              </div>
+
+            </div>
+
+
+            <div class="mt-4 flex flex-col md:flex-row gap-3">
+
+              <input
+                id="lead-search"
+                oninput="renderLeads()"
+                type="text"
+                placeholder="Search name, company, phone, email, service..."
+                class="flex-1 border border-slate-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+              >
+
+              <select
+                id="lead-status-filter"
+                onchange="renderLeads()"
+                class="border border-slate-300 rounded-xl px-4 py-2.5 outline-none"
+              >
+                <option value="">All Status</option>
+                <option value="NEW">New</option>
+                <option value="CONTACTED">Contacted</option>
+                <option value="FOLLOW_UP">Follow-up</option>
+                <option value="WON">Won</option>
+                <option value="LOST">Lost</option>
+              </select>
+
+            </div>
+
+          </div>
+
+
+          <div class="table-wrap">
+
+            <table class="w-full text-sm">
+
+              <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+
+                <tr>
+                  <th class="text-left px-5 py-4">Lead</th>
+                  <th class="text-left px-5 py-4">Contact</th>
+                  <th class="text-left px-5 py-4">Service</th>
+                  <th class="text-left px-5 py-4">Value</th>
+                  <th class="text-left px-5 py-4">Status</th>
+                  <th class="text-left px-5 py-4">Follow-up</th>
+                  <th class="text-right px-5 py-4">Actions</th>
+                </tr>
+
+              </thead>
+
+              <tbody id="leads-table"></tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
       </section>
 
+
+      <!-- ===================================================== -->
+      <!-- FOLLOW UPS -->
+      <!-- ===================================================== -->
+
+      <section id="page-followups" class="page-section hidden">
+
+        <div class="card">
+
+          <div class="p-5 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+
+            <div>
+              <h2 class="text-lg font-black">
+                Follow-up Management
+              </h2>
+
+              <p class="text-sm text-slate-500">
+                Keep track of pending and upcoming enquiries
+              </p>
+            </div>
+
+            <button
+              onclick="exportFollowupsExcel()"
+              class="px-4 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold"
+            >
+              📊 Export Excel
+            </button>
+
+          </div>
+
+
+          <div class="p-5">
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+
+              <div class="bg-red-50 rounded-xl p-4">
+                <div class="text-sm text-red-600">
+                  Overdue
+                </div>
+                <div id="followup-overdue" class="text-2xl font-black text-red-700 mt-1">
+                  0
+                </div>
+              </div>
+
+              <div class="bg-orange-50 rounded-xl p-4">
+                <div class="text-sm text-orange-600">
+                  Today
+                </div>
+                <div id="followup-today" class="text-2xl font-black text-orange-700 mt-1">
+                  0
+                </div>
+              </div>
+
+              <div class="bg-blue-50 rounded-xl p-4">
+                <div class="text-sm text-blue-600">
+                  Upcoming
+                </div>
+                <div id="followup-upcoming" class="text-2xl font-black text-blue-700 mt-1">
+                  0
+                </div>
+              </div>
+
+            </div>
+
+
+            <div class="table-wrap">
+
+              <table class="w-full text-sm">
+
+                <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+
+                  <tr>
+                    <th class="text-left px-5 py-4">Lead</th>
+                    <th class="text-left px-5 py-4">Phone</th>
+                    <th class="text-left px-5 py-4">Service</th>
+                    <th class="text-left px-5 py-4">Follow-up Date</th>
+                    <th class="text-left px-5 py-4">Note</th>
+                    <th class="text-right px-5 py-4">Action</th>
+                  </tr>
+
+                </thead>
+
+                <tbody id="followups-table"></tbody>
+
+              </table>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ===================================================== -->
       <!-- CLIENTS -->
-      <section id="tab-clients" class="hidden space-y-5">
-        <div class="flex flex-wrap justify-between items-center gap-3"><h2 class="text-xl font-bold">Clients</h2><button onclick="prepareAddClient()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">+ Add Client</button></div>
-        <div class="bg-white border rounded-xl p-3"><input id="client-search" oninput="renderClients()" class="w-full border rounded-lg p-2" placeholder="Search client, company, phone or email..."></div>
-        <div class="bg-white border rounded-xl overflow-auto"><table class="min-w-full text-sm"><thead class="bg-slate-50"><tr><th class="p-3 text-left">Name</th><th class="p-3 text-left">Company</th><th class="p-3 text-left">Phone</th><th class="p-3 text-left">Email</th><th class="p-3 text-right">Action</th></tr></thead><tbody id="clients-table-body"></tbody></table></div>
+      <!-- ===================================================== -->
+
+      <section id="page-clients" class="page-section hidden">
+
+        <div class="card">
+
+          <div class="p-5 border-b border-slate-200">
+
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+
+              <div>
+                <h2 class="text-lg font-black">
+                  Clients
+                </h2>
+
+                <p class="text-sm text-slate-500">
+                  Manage your customer database
+                </p>
+              </div>
+
+              <div class="flex gap-2">
+
+                <button
+                  onclick="exportClientsExcel()"
+                  class="px-4 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold"
+                >
+                  📊 Excel
+                </button>
+
+                <button
+                  onclick="openClientModal()"
+                  class="px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold"
+                >
+                  + Add Client
+                </button>
+
+              </div>
+
+            </div>
+
+
+            <div class="mt-4">
+
+              <input
+                id="client-search"
+                oninput="renderClients()"
+                type="text"
+                placeholder="Search client, company, phone, email..."
+                class="w-full border border-slate-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+              >
+
+            </div>
+
+          </div>
+
+
+          <div class="table-wrap">
+
+            <table class="w-full text-sm">
+
+              <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+
+                <tr>
+                  <th class="text-left px-5 py-4">Client</th>
+                  <th class="text-left px-5 py-4">Company</th>
+                  <th class="text-left px-5 py-4">Phone</th>
+                  <th class="text-left px-5 py-4">Email</th>
+                  <th class="text-left px-5 py-4">Projects</th>
+                  <th class="text-right px-5 py-4">Actions</th>
+                </tr>
+
+              </thead>
+
+              <tbody id="clients-table"></tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
       </section>
 
+
+      <!-- ===================================================== -->
       <!-- PROJECTS -->
-      <section id="tab-projects" class="hidden space-y-5">
-        <div class="flex flex-wrap justify-between items-center gap-3"><h2 class="text-xl font-bold">Projects</h2><button onclick="prepareAddProject()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">+ New Project</button></div>
-        <div class="bg-white border rounded-xl p-3"><input id="project-search" oninput="renderProjects()" class="w-full border rounded-lg p-2" placeholder="Search project, client or service..."></div>
-        <div class="bg-white border rounded-xl overflow-auto"><table class="min-w-full text-sm"><thead class="bg-slate-50"><tr><th class="p-3 text-left">Project</th><th class="p-3 text-left">Client</th><th class="p-3 text-left">Service</th><th class="p-3 text-left">Budget</th><th class="p-3 text-left">Status</th><th class="p-3 text-left">Deadline</th><th class="p-3 text-right">Action</th></tr></thead><tbody id="projects-table-body"></tbody></table></div>
+      <!-- ===================================================== -->
+
+      <section id="page-projects" class="page-section hidden">
+
+        <div class="card">
+
+          <div class="p-5 border-b border-slate-200">
+
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+
+              <div>
+                <h2 class="text-lg font-black">
+                  Projects
+                </h2>
+
+                <p class="text-sm text-slate-500">
+                  Manage ongoing client projects
+                </p>
+              </div>
+
+              <div class="flex gap-2">
+
+                <button
+                  onclick="exportProjectsExcel()"
+                  class="px-4 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold"
+                >
+                  📊 Excel
+                </button>
+
+                <button
+                  onclick="openProjectModal()"
+                  class="px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold"
+                >
+                  + New Project
+                </button>
+
+              </div>
+
+            </div>
+
+
+            <div class="mt-4 flex flex-col md:flex-row gap-3">
+
+              <input
+                id="project-search"
+                oninput="renderProjects()"
+                type="text"
+                placeholder="Search project, client, service..."
+                class="flex-1 border border-slate-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+              >
+
+              <select
+                id="project-status-filter"
+                onchange="renderProjects()"
+                class="border border-slate-300 rounded-xl px-4 py-2.5"
+              >
+                <option value="">All Status</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="ON_HOLD">On Hold</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+
+            </div>
+
+          </div>
+
+
+          <div class="table-wrap">
+
+            <table class="w-full text-sm">
+
+              <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+
+                <tr>
+                  <th class="text-left px-5 py-4">Project</th>
+                  <th class="text-left px-5 py-4">Client</th>
+                  <th class="text-left px-5 py-4">Service</th>
+                  <th class="text-left px-5 py-4">Budget</th>
+                  <th class="text-left px-5 py-4">Status</th>
+                  <th class="text-left px-5 py-4">Deadline</th>
+                  <th class="text-right px-5 py-4">Actions</th>
+                </tr>
+
+              </thead>
+
+              <tbody id="projects-table"></tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
       </section>
 
+
+      <!-- ===================================================== -->
       <!-- INVOICES -->
-      <section id="tab-invoices" class="hidden space-y-5">
-        <div class="flex flex-wrap justify-between items-center gap-3"><div><h2 class="text-xl font-bold">Invoices</h2><p class="text-xs text-slate-500">Simple invoice tracking</p></div><button onclick="prepareAddInvoice()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">+ Create Invoice</button></div>
-        <div class="bg-white border rounded-xl p-3"><input id="invoice-search" oninput="renderInvoices()" class="w-full border rounded-lg p-2" placeholder="Search invoice or client..."></div>
-        <div class="bg-white border rounded-xl overflow-auto"><table class="min-w-full text-sm"><thead class="bg-slate-50"><tr><th class="p-3 text-left">Invoice</th><th class="p-3 text-left">Client</th><th class="p-3 text-left">Amount</th><th class="p-3 text-left">Status</th><th class="p-3 text-left">Date</th><th class="p-3 text-right">Action</th></tr></thead><tbody id="invoices-table-body"></tbody></table></div>
+      <!-- ===================================================== -->
+
+      <section id="page-invoices" class="page-section hidden">
+
+        <div class="card">
+
+          <div class="p-5 border-b border-slate-200">
+
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+
+              <div>
+                <h2 class="text-lg font-black">
+                  Invoices
+                </h2>
+
+                <p class="text-sm text-slate-500">
+                  Create, manage, print and download invoices
+                </p>
+              </div>
+
+              <div class="flex gap-2">
+
+                <button
+                  onclick="exportInvoicesExcel()"
+                  class="px-4 py-2.5 rounded-xl bg-green-600 text-white text-sm font-bold"
+                >
+                  📊 Excel
+                </button>
+
+                <button
+                  onclick="openInvoiceModal()"
+                  class="px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold"
+                >
+                  + New Invoice
+                </button>
+
+              </div>
+
+            </div>
+
+
+            <div class="mt-4 flex flex-col md:flex-row gap-3">
+
+              <input
+                id="invoice-search"
+                oninput="renderInvoices()"
+                type="text"
+                placeholder="Search invoice number or client..."
+                class="flex-1 border border-slate-300 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
+              >
+
+              <select
+                id="invoice-status-filter"
+                onchange="renderInvoices()"
+                class="border border-slate-300 rounded-xl px-4 py-2.5"
+              >
+                <option value="">All Status</option>
+                <option value="PENDING">Pending</option>
+                <option value="PAID">Paid</option>
+                <option value="PARTIAL">Partial</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+
+            </div>
+
+          </div>
+
+
+          <div class="table-wrap">
+
+            <table class="w-full text-sm">
+
+              <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+
+                <tr>
+                  <th class="text-left px-5 py-4">Invoice</th>
+                  <th class="text-left px-5 py-4">Client</th>
+                  <th class="text-left px-5 py-4">Date</th>
+                  <th class="text-left px-5 py-4">Amount</th>
+                  <th class="text-left px-5 py-4">Status</th>
+                  <th class="text-right px-5 py-4">Actions</th>
+                </tr>
+
+              </thead>
+
+              <tbody id="invoices-table"></tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
       </section>
-    </main>
-  </div>
+
+
+    </div>
+
+  </main>
+
 </div>
 
-<!-- MODALS -->
-<div id="lead-modal" class="hidden fixed inset-0 bg-black/50 items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-xl w-full max-w-md max-h-[95vh] overflow-auto"><h3 id="lead-modal-title" class="text-lg font-bold mb-4">Add Lead</h3><form onsubmit="submitLead(event)" class="space-y-3"><input id="lead-id" type="hidden"><input id="lead-name" required placeholder="Full Name" class="w-full border p-2 rounded"><input id="lead-company" placeholder="Company" class="w-full border p-2 rounded"><input id="lead-phone" required placeholder="Phone" class="w-full border p-2 rounded"><input id="lead-email" type="email" placeholder="Email" class="w-full border p-2 rounded"><input id="lead-service" required placeholder="Service" class="w-full border p-2 rounded"><input id="lead-value" type="number" min="0" placeholder="Expected Value ₹" class="w-full border p-2 rounded"><select id="lead-status" class="w-full border p-2 rounded"><option value="NEW">NEW</option><option value="CONTACTED">CONTACTED</option><option value="FOLLOW_UP">FOLLOW UP</option><option value="WON">WON</option><option value="LOST">LOST</option></select><input id="lead-follow-date" type="date" class="w-full border p-2 rounded"><textarea id="lead-follow-note" placeholder="Follow-up note" class="w-full border p-2 rounded"></textarea><div class="flex justify-end gap-2"><button type="button" onclick="closeModal('lead-modal')" class="px-4 py-2">Cancel</button><button id="lead-submit-btn" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button></div></form></div></div>
 
-<div id="client-modal" class="hidden fixed inset-0 bg-black/50 items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-xl w-full max-w-md max-h-[95vh] overflow-auto"><h3 id="client-modal-title" class="text-lg font-bold mb-4">Add Client</h3><form onsubmit="submitClient(event)" class="space-y-3"><input id="client-id" type="hidden"><input id="client-name" required placeholder="Name" class="w-full border p-2 rounded"><input id="client-company" placeholder="Company" class="w-full border p-2 rounded"><input id="client-phone" required placeholder="Phone" class="w-full border p-2 rounded"><input id="client-email" type="email" placeholder="Email" class="w-full border p-2 rounded"><input id="client-state" placeholder="State" value="Maharashtra" class="w-full border p-2 rounded"><input id="client-state-code" placeholder="State Code" value="27" class="w-full border p-2 rounded"><div class="flex justify-end gap-2"><button type="button" onclick="closeModal('client-modal')" class="px-4 py-2">Cancel</button><button id="client-submit-btn" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button></div></form></div></div>
+<!-- ========================================================= -->
+<!-- LEAD MODAL -->
+<!-- ========================================================= -->
 
-<div id="project-modal" class="hidden fixed inset-0 bg-black/50 items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-xl w-full max-w-md max-h-[95vh] overflow-auto"><h3 id="project-modal-title" class="text-lg font-bold mb-4">New Project</h3><form onsubmit="submitProject(event)" class="space-y-3"><input id="proj-id" type="hidden"><input id="proj-title" required placeholder="Project Name" class="w-full border p-2 rounded"><input id="proj-client" required placeholder="Client Name" class="w-full border p-2 rounded"><input id="proj-service" placeholder="Service" class="w-full border p-2 rounded"><input id="proj-budget" type="number" min="0" placeholder="Budget ₹" class="w-full border p-2 rounded"><select id="proj-status" class="w-full border p-2 rounded"><option value="IN_PROGRESS">IN PROGRESS</option><option value="COMPLETED">COMPLETED</option><option value="ON_HOLD">ON HOLD</option><option value="CANCELLED">CANCELLED</option></select><input id="proj-deadline" type="date" required class="w-full border p-2 rounded"><div class="flex justify-end gap-2"><button type="button" onclick="closeModal('project-modal')" class="px-4 py-2">Cancel</button><button id="project-submit-btn" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button></div></form></div></div>
+<div id="lead-modal" class="hidden fixed inset-0 modal-bg z-[100] items-center justify-center p-4">
 
-<div id="invoice-modal" class="hidden fixed inset-0 bg-black/50 items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-xl w-full max-w-md"><h3 id="invoice-modal-title" class="text-lg font-bold mb-4">Create Invoice</h3><form onsubmit="submitInvoice(event)" class="space-y-3"><input id="inv-id" type="hidden"><input id="inv-client" required placeholder="Client Name" class="w-full border p-2 rounded"><input id="inv-amount" required type="number" min="1" placeholder="Invoice Amount ₹" class="w-full border p-2 rounded"><select id="inv-status" class="w-full border p-2 rounded"><option value="PENDING">PENDING</option><option value="PAID">PAID</option><option value="CANCELLED">CANCELLED</option></select><input id="inv-date" type="date" class="w-full border p-2 rounded"><div class="flex justify-end gap-2"><button type="button" onclick="closeModal('invoice-modal')" class="px-4 py-2">Cancel</button><button id="invoice-submit-btn" class="bg-blue-600 text-white px-4 py-2 rounded">Generate</button></div></form></div></div>
+  <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+
+    <div class="p-5 border-b flex items-center justify-between">
+
+      <div>
+        <h3 id="lead-modal-title" class="text-xl font-black">
+          Add Lead
+        </h3>
+
+        <p class="text-sm text-slate-500">
+          Add enquiry details
+        </p>
+      </div>
+
+      <button
+        onclick="closeModal('lead-modal')"
+        class="w-9 h-9 rounded-xl bg-slate-100"
+      >
+        ✕
+      </button>
+
+    </div>
+
+
+    <form id="lead-form" onsubmit="saveLead(event)" class="p-5 space-y-4">
+
+      <input type="hidden" id="lead-id">
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div>
+          <label class="label">Name *</label>
+          <input id="lead-name" required class="input" placeholder="Lead name">
+        </div>
+
+        <div>
+          <label class="label">Company</label>
+          <input id="lead-company" class="input" placeholder="Company name">
+        </div>
+
+        <div>
+          <label class="label">Phone *</label>
+          <input id="lead-phone" required class="input" placeholder="Mobile number">
+        </div>
+
+        <div>
+          <label class="label">Email</label>
+          <input id="lead-email" type="email" class="input" placeholder="Email">
+        </div>
+
+        <div>
+          <label class="label">Service *</label>
+          <input id="lead-service" required class="input" placeholder="Website / SMM / SEO etc.">
+        </div>
+
+        <div>
+          <label class="label">Expected Value ₹</label>
+          <input id="lead-value" type="number" min="0" class="input" placeholder="0">
+        </div>
+
+        <div>
+          <label class="label">Status</label>
+
+          <select id="lead-status" class="input">
+            <option value="NEW">New</option>
+            <option value="CONTACTED">Contacted</option>
+            <option value="FOLLOW_UP">Follow-up</option>
+            <option value="WON">Won</option>
+            <option value="LOST">Lost</option>
+          </select>
+
+        </div>
+
+        <div>
+          <label class="label">Follow-up Date</label>
+          <input id="lead-follow-date" type="date" class="input">
+        </div>
+
+      </div>
+
+
+      <div>
+        <label class="label">Follow-up Note</label>
+
+        <textarea
+          id="lead-follow-note"
+          rows="3"
+          class="input"
+          placeholder="What needs to be discussed?"
+        ></textarea>
+      </div>
+
+
+      <div class="flex justify-end gap-3 pt-2">
+
+        <button
+          type="button"
+          onclick="closeModal('lead-modal')"
+          class="px-5 py-2.5 rounded-xl bg-slate-100 font-semibold"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold"
+        >
+          Save Lead
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- CLIENT MODAL -->
+<!-- ========================================================= -->
+
+<div id="client-modal" class="hidden fixed inset-0 modal-bg z-[100] items-center justify-center p-4">
+
+  <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+
+    <div class="p-5 border-b flex items-center justify-between">
+
+      <div>
+        <h3 id="client-modal-title" class="text-xl font-black">
+          Add Client
+        </h3>
+
+        <p class="text-sm text-slate-500">
+          Customer information
+        </p>
+      </div>
+
+      <button
+        onclick="closeModal('client-modal')"
+        class="w-9 h-9 rounded-xl bg-slate-100"
+      >
+        ✕
+      </button>
+
+    </div>
+
+
+    <form id="client-form" onsubmit="saveClient(event)" class="p-5 space-y-4">
+
+      <input type="hidden" id="client-id">
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div>
+          <label class="label">Name *</label>
+          <input id="client-name" required class="input" placeholder="Client name">
+        </div>
+
+        <div>
+          <label class="label">Company</label>
+          <input id="client-company" class="input" placeholder="Company name">
+        </div>
+
+        <div>
+          <label class="label">Phone *</label>
+          <input id="client-phone" required class="input" placeholder="Mobile number">
+        </div>
+
+        <div>
+          <label class="label">Email</label>
+          <input id="client-email" type="email" class="input" placeholder="Email">
+        </div>
+
+        <div>
+          <label class="label">State</label>
+          <input id="client-state" class="input" value="Maharashtra">
+        </div>
+
+      </div>
+
+
+      <div class="flex justify-end gap-3 pt-2">
+
+        <button
+          type="button"
+          onclick="closeModal('client-modal')"
+          class="px-5 py-2.5 rounded-xl bg-slate-100 font-semibold"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold"
+        >
+          Save Client
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- PROJECT MODAL -->
+<!-- ========================================================= -->
+
+<div id="project-modal" class="hidden fixed inset-0 modal-bg z-[100] items-center justify-center p-4">
+
+  <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl">
+
+    <div class="p-5 border-b flex items-center justify-between">
+
+      <div>
+        <h3 id="project-modal-title" class="text-xl font-black">
+          New Project
+        </h3>
+
+        <p class="text-sm text-slate-500">
+          Project information
+        </p>
+      </div>
+
+      <button
+        onclick="closeModal('project-modal')"
+        class="w-9 h-9 rounded-xl bg-slate-100"
+      >
+        ✕
+      </button>
+
+    </div>
+
+
+    <form id="project-form" onsubmit="saveProject(event)" class="p-5 space-y-4">
+
+      <input type="hidden" id="project-id">
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div>
+          <label class="label">Project Name *</label>
+          <input id="project-title" required class="input" placeholder="Website Development">
+        </div>
+
+        <div>
+          <label class="label">Client *</label>
+          <input id="project-client" required class="input" placeholder="Client name">
+        </div>
+
+        <div>
+          <label class="label">Service</label>
+          <input id="project-service" class="input" placeholder="Web Development">
+        </div>
+
+        <div>
+          <label class="label">Budget ₹</label>
+          <input id="project-budget" type="number" min="0" class="input" placeholder="0">
+        </div>
+
+        <div>
+          <label class="label">Status</label>
+
+          <select id="project-status" class="input">
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="ON_HOLD">On Hold</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+
+        </div>
+
+        <div>
+          <label class="label">Deadline</label>
+          <input id="project-deadline" type="date" class="input">
+        </div>
+
+      </div>
+
+
+      <div class="flex justify-end gap-3">
+
+        <button
+          type="button"
+          onclick="closeModal('project-modal')"
+          class="px-5 py-2.5 rounded-xl bg-slate-100 font-semibold"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold"
+        >
+          Save Project
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- INVOICE MODAL -->
+<!-- ========================================================= -->
+
+<div id="invoice-modal" class="hidden fixed inset-0 modal-bg z-[100] items-center justify-center p-4">
+
+  <div class="bg-white rounded-2xl w-full max-w-xl shadow-2xl">
+
+    <div class="p-5 border-b flex items-center justify-between">
+
+      <div>
+        <h3 id="invoice-modal-title" class="text-xl font-black">
+          New Invoice
+        </h3>
+
+        <p class="text-sm text-slate-500">
+          Create a professional invoice
+        </p>
+      </div>
+
+      <button
+        onclick="closeModal('invoice-modal')"
+        class="w-9 h-9 rounded-xl bg-slate-100"
+      >
+        ✕
+      </button>
+
+    </div>
+
+
+    <form id="invoice-form" onsubmit="saveInvoice(event)" class="p-5 space-y-4">
+
+      <input type="hidden" id="invoice-id">
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div>
+          <label class="label">Client Name *</label>
+          <input id="invoice-client" required class="input" placeholder="Client name">
+        </div>
+
+        <div>
+          <label class="label">Invoice Date</label>
+          <input id="invoice-date" type="date" class="input">
+        </div>
+
+        <div>
+          <label class="label">Amount ₹ *</label>
+          <input id="invoice-amount" type="number" min="0" step="0.01" required class="input" placeholder="0">
+        </div>
+
+        <div>
+          <label class="label">Status</label>
+
+          <select id="invoice-status" class="input">
+            <option value="PENDING">Pending</option>
+            <option value="PAID">Paid</option>
+            <option value="PARTIAL">Partial</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <div class="bg-blue-50 rounded-xl p-4 text-sm text-blue-800">
+        Invoice amount is the final payable amount.
+      </div>
+
+
+      <div class="flex justify-end gap-3">
+
+        <button
+          type="button"
+          onclick="closeModal('invoice-modal')"
+          class="px-5 py-2.5 rounded-xl bg-slate-100 font-semibold"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold"
+        >
+          Save Invoice
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- TOAST -->
+<!-- ========================================================= -->
+
+<div
+  id="toast"
+  class="hidden fixed right-5 bottom-5 z-[200] min-w-[280px] max-w-sm rounded-xl shadow-xl p-4 text-sm font-semibold"
+></div>
+
+
+<!-- ========================================================= -->
+<!-- STYLES -->
+<!-- ========================================================= -->
+
+<style>
+
+  .label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: #334155;
+  }
+
+  .input {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 10px 12px;
+    outline: none;
+    background: white;
+  }
+
+  .input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59,130,246,.15);
+  }
+
+</style>
+
+
+<!-- ========================================================= -->
+<!-- JAVASCRIPT -->
+<!-- ========================================================= -->
 
 <script>
-const API='/api';
-const money=n=>'₹'+Number(n||0).toLocaleString('en-IN');
-let leadsData=[],clientsData=[],projectsData=[],invoicesData=[];
 
-async function api(url,options={}){const r=await fetch(url,{...options,credentials:'same-origin'});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||'Request failed');return d}
-function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
-function emptyRow(cols){return `<tr><td colspan="${cols}" class="p-8 text-center text-slate-400">No records found.</td></tr>`}
-function showMessage(text,ok=true){const e=document.getElementById('message');e.textContent=text;e.className='px-4 py-2 rounded-lg text-sm '+(ok?'bg-emerald-100 text-emerald-800':'bg-red-100 text-red-800');setTimeout(()=>e.classList.add('hidden'),3000)}
-function showLoginError(text){const e=document.getElementById('login-error');e.textContent=text;e.classList.remove('hidden')}
-function openModal(id){const e=document.getElementById(id);e.classList.remove('hidden');e.classList.add('flex')}
-function closeModal(id){const e=document.getElementById(id);e.classList.add('hidden');e.classList.remove('flex')}
+const API = '/api';
 
-async function login(e){e.preventDefault();try{await api(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:document.getElementById('login-user').value,password:document.getElementById('login-pass').value})});document.getElementById('login-error').classList.add('hidden');showApp()}catch(err){showLoginError(err.message)}}
-async function checkAuth(){try{await api(API+'/auth/me');showApp()}catch{document.getElementById('login-screen').classList.remove('hidden')}}
-function showApp(){document.getElementById('login-screen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');loadData()}
-async function logout(){try{await api(API+'/logout',{method:'POST'})}finally{location.reload()}}
+let leadsData = [];
+let clientsData = [];
+let projectsData = [];
+let invoicesData = [];
+let followupsData = [];
 
-function showTab(name){['dashboard','leads','clients','projects','invoices'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==name));document.querySelectorAll('.nav-btn').forEach(b=>{b.classList.remove('bg-blue-700','text-white');b.classList.add('text-slate-300')});const map={dashboard:0,leads:1,clients:2,projects:3,invoices:4};const btn=document.querySelectorAll('.nav-btn')[map[name]];btn.classList.add('bg-blue-700','text-white');btn.classList.remove('text-slate-300');document.getElementById('page-title').textContent={dashboard:'Agency Overview',leads:'Leads Pipeline',clients:'Clients',projects:'Projects',invoices:'Invoices'}[name];loadData()}
+let currentPage = 'dashboard';
 
-async function loadData(){try{const s=await api(API+'/stats');document.getElementById('stat-leads').textContent=s.total_leads||0;document.getElementById('stat-clients').textContent=s.total_clients||0;document.getElementById('stat-projects').textContent=s.active_projects||0;document.getElementById('stat-revenue').textContent=money(s.total_revenue);document.getElementById('stat-new').textContent=s.new_leads||0;document.getElementById('stat-follow').textContent=s.follow_up_leads||0;document.getElementById('stat-pending').textContent=s.pending_invoices||0;leadsData=await api(API+'/leads');clientsData=await api(API+'/clients');projectsData=await api(API+'/projects');invoicesData=await api(API+'/invoices');renderLeads();renderClients();renderProjects();renderInvoices()}catch(e){if(e.message==='Authentication required.')return location.reload();showMessage(e.message,false)}}
 
-function renderLeads(){const q=(document.getElementById('lead-search')?.value||'').toLowerCase();const rows=leadsData.filter(l=>[l.name,l.company,l.phone,l.service,l.status].some(v=>String(v||'').toLowerCase().includes(q)));document.getElementById('leads-table-body').innerHTML=rows.map(l=>`<tr class="border-t"><td class="p-3 font-semibold">${esc(l.name)}<br><span class="text-xs text-slate-400">${esc(l.company||'')}</span></td><td class="p-3">${esc(l.phone)}</td><td class="p-3">${esc(l.service||'')}</td><td class="p-3">${money(l.expected_value)}</td><td class="p-3">${esc(l.status)}</td><td class="p-3">${esc(l.follow_up_date||'')}<br><span class="text-xs text-slate-400">${esc(l.follow_up_note||'')}</span></td><td class="p-3 text-right whitespace-nowrap">${l.status!=='WON'?`<button onclick="convertLead(${l.id})" class="bg-emerald-600 text-white px-2 py-1 rounded text-xs mr-1">Convert</button>`:''}<button onclick="editLead(${l.id})" class="bg-blue-600 text-white px-2 py-1 rounded text-xs mr-1">Edit</button><button onclick="deleteRecord('leads',${l.id})" class="bg-red-600 text-white px-2 py-1 rounded text-xs">Delete</button></td></tr>`).join('')||emptyRow(7)}
-function renderClients(){const q=(document.getElementById('client-search')?.value||'').toLowerCase();const rows=clientsData.filter(c=>[c.name,c.company,c.phone,c.email].some(v=>String(v||'').toLowerCase().includes(q)));document.getElementById('clients-table-body').innerHTML=rows.map(c=>`<tr class="border-t"><td class="p-3 font-semibold">${esc(c.name)}</td><td class="p-3">${esc(c.company||'')}</td><td class="p-3">${esc(c.phone)}</td><td class="p-3">${esc(c.email||'')}</td><td class="p-3 text-right whitespace-nowrap"><button onclick="editClient(${c.id})" class="bg-blue-600 text-white px-2 py-1 rounded text-xs mr-1">Edit</button><button onclick="deleteRecord('clients',${c.id})" class="bg-red-600 text-white px-2 py-1 rounded text-xs">Delete</button></td></tr>`).join('')||emptyRow(5)}
-function renderProjects(){const q=(document.getElementById('project-search')?.value||'').toLowerCase();const rows=projectsData.filter(p=>[p.title,p.client_name,p.service,p.status].some(v=>String(v||'').toLowerCase().includes(q)));document.getElementById('projects-table-body').innerHTML=rows.map(p=>`<tr class="border-t"><td class="p-3 font-semibold">${esc(p.title)}</td><td class="p-3">${esc(p.client_name)}</td><td class="p-3">${esc(p.service||'')}</td><td class="p-3">${money(p.budget)}</td><td class="p-3">${esc(p.status)}</td><td class="p-3">${esc(p.deadline||'')}</td><td class="p-3 text-right whitespace-nowrap"><button onclick="editProject(${p.id})" class="bg-blue-600 text-white px-2 py-1 rounded text-xs mr-1">Edit</button><button onclick="deleteRecord('projects',${p.id})" class="bg-red-600 text-white px-2 py-1 rounded text-xs">Delete</button></td></tr>`).join('')||emptyRow(7)}
-function renderInvoices(){const q=(document.getElementById('invoice-search')?.value||'').toLowerCase();const rows=invoicesData.filter(i=>[i.invoice_number,i.client_name,i.status].some(v=>String(v||'').toLowerCase().includes(q)));document.getElementById('invoices-table-body').innerHTML=rows.map(i=>`<tr class="border-t"><td class="p-3 font-semibold text-blue-600">${esc(i.invoice_number)}</td><td class="p-3">${esc(i.client_name)}</td><td class="p-3 font-bold">${money(i.grand_total)}</td><td class="p-3">${esc(i.status)}</td><td class="p-3">${esc(i.date||'')}</td><td class="p-3 text-right whitespace-nowrap"><button onclick="editInvoice(${i.id})" class="bg-blue-600 text-white px-2 py-1 rounded text-xs mr-1">Edit</button><button onclick="deleteRecord('invoices',${i.id})" class="bg-red-600 text-white px-2 py-1 rounded text-xs">Delete</button></td></tr>`).join('')||emptyRow(6)}
+/* =========================================================
+   COMMON
+========================================================= */
 
-function prepareAddLead(){document.getElementById('lead-id').value='';document.getElementById('lead-modal-title').textContent='Add Lead';document.getElementById('lead-submit-btn').textContent='Save';['lead-name','lead-company','lead-phone','lead-email','lead-service','lead-value','lead-follow-date','lead-follow-note'].forEach(id=>document.getElementById(id).value='');document.getElementById('lead-status').value='NEW';openModal('lead-modal')}
-function editLead(id){const l=leadsData.find(x=>Number(x.id)===Number(id));if(!l)return;document.getElementById('lead-id').value=l.id;document.getElementById('lead-modal-title').textContent='Edit Lead';document.getElementById('lead-submit-btn').textContent='Update';document.getElementById('lead-name').value=l.name||'';document.getElementById('lead-company').value=l.company||'';document.getElementById('lead-phone').value=l.phone||'';document.getElementById('lead-email').value=l.email||'';document.getElementById('lead-service').value=l.service||'';document.getElementById('lead-value').value=l.expected_value||0;document.getElementById('lead-status').value=l.status||'NEW';document.getElementById('lead-follow-date').value=l.follow_up_date||'';document.getElementById('lead-follow-note').value=l.follow_up_note||'';openModal('lead-modal')}
-async function submitLead(e){e.preventDefault();try{const id=document.getElementById('lead-id').value;const payload={name:document.getElementById('lead-name').value,company:document.getElementById('lead-company').value,phone:document.getElementById('lead-phone').value,email:document.getElementById('lead-email').value,service:document.getElementById('lead-service').value,expected_value:document.getElementById('lead-value').value,status:document.getElementById('lead-status').value,follow_up_date:document.getElementById('lead-follow-date').value,follow_up_note:document.getElementById('lead-follow-note').value};await api(id?API+'/leads/'+id:API+'/leads',{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});closeModal('lead-modal');showMessage(id?'Lead updated successfully.':'Lead saved successfully.');loadData()}catch(e){showMessage(e.message,false)}}
+function esc(value) {
 
-function prepareAddClient(){document.getElementById('client-id').value='';document.getElementById('client-modal-title').textContent='Add Client';document.getElementById('client-submit-btn').textContent='Save';['client-name','client-company','client-phone','client-email','client-gstin'].forEach(id=>document.getElementById(id).value='');document.getElementById('client-state').value='Maharashtra';document.getElementById('client-state-code').value='27';openModal('client-modal')}
-function editClient(id){const c=clientsData.find(x=>Number(x.id)===Number(id));if(!c)return;document.getElementById('client-id').value=c.id;document.getElementById('client-modal-title').textContent='Edit Client';document.getElementById('client-submit-btn').textContent='Update';document.getElementById('client-name').value=c.name||'';document.getElementById('client-company').value=c.company||'';document.getElementById('client-phone').value=c.phone||'';document.getElementById('client-email').value=c.email||'';document.getElementById('client-state').value=c.state||'Maharashtra';document.getElementById('client-state-code').value=c.state_code||'27';openModal('client-modal')}
-async function submitClient(e){e.preventDefault();try{const id=document.getElementById('client-id').value;const payload={name:document.getElementById('client-name').value,company:document.getElementById('client-company').value,phone:document.getElementById('client-phone').value,email:document.getElementById('client-email').value,state:document.getElementById('client-state').value,state_code:document.getElementById('client-state-code').value};await api(id?API+'/clients/'+id:API+'/clients',{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});closeModal('client-modal');showMessage(id?'Client updated successfully.':'Client saved successfully.');loadData()}catch(e){showMessage(e.message,false)}}
+  if (value === null || value === undefined) return '';
 
-function prepareAddProject(){document.getElementById('proj-id').value='';document.getElementById('project-modal-title').textContent='New Project';document.getElementById('project-submit-btn').textContent='Save';['proj-title','proj-client','proj-service','proj-budget','proj-deadline'].forEach(id=>document.getElementById(id).value='');document.getElementById('proj-status').value='IN_PROGRESS';openModal('project-modal')}
-function editProject(id){const p=projectsData.find(x=>Number(x.id)===Number(id));if(!p)return;document.getElementById('proj-id').value=p.id;document.getElementById('project-modal-title').textContent='Edit Project';document.getElementById('project-submit-btn').textContent='Update';document.getElementById('proj-title').value=p.title||'';document.getElementById('proj-client').value=p.client_name||'';document.getElementById('proj-service').value=p.service||'';document.getElementById('proj-budget').value=p.budget||0;document.getElementById('proj-status').value=p.status||'IN_PROGRESS';document.getElementById('proj-deadline').value=p.deadline||'';openModal('project-modal')}
-async function submitProject(e){e.preventDefault();try{const id=document.getElementById('proj-id').value;const payload={title:document.getElementById('proj-title').value,client_name:document.getElementById('proj-client').value,service:document.getElementById('proj-service').value,budget:document.getElementById('proj-budget').value,status:document.getElementById('proj-status').value,deadline:document.getElementById('proj-deadline').value};await api(id?API+'/projects/'+id:API+'/projects',{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});closeModal('project-modal');showMessage(id?'Project updated successfully.':'Project saved successfully.');loadData()}catch(e){showMessage(e.message,false)}}
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
 
-function prepareAddInvoice(){document.getElementById('inv-id').value='';document.getElementById('invoice-modal-title').textContent='Create Invoice';document.getElementById('invoice-submit-btn').textContent='Generate';document.getElementById('inv-client').value='';document.getElementById('inv-amount').value='';document.getElementById('inv-status').value='PENDING';document.getElementById('inv-date').value=new Date().toISOString().split('T')[0];openModal('invoice-modal')}
-function editInvoice(id){const i=invoicesData.find(x=>Number(x.id)===Number(id));if(!i)return;document.getElementById('inv-id').value=i.id;document.getElementById('invoice-modal-title').textContent='Edit Invoice';document.getElementById('invoice-submit-btn').textContent='Update';document.getElementById('inv-client').value=i.client_name||'';document.getElementById('inv-amount').value=i.grand_total||0;document.getElementById('inv-status').value=i.status||'PENDING';document.getElementById('inv-date').value=i.date||'';openModal('invoice-modal')}
-async function submitInvoice(e){e.preventDefault();try{const id=document.getElementById('inv-id').value;const payload={client_name:document.getElementById('inv-client').value,taxable_amount:document.getElementById('inv-amount').value,status:document.getElementById('inv-status').value,date:document.getElementById('inv-date').value};await api(id?API+'/invoices/'+id:API+'/invoices',{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});closeModal('invoice-modal');showMessage(id?'Invoice updated successfully.':'Invoice created successfully.');loadData()}catch(e){showMessage(e.message,false)}}
 
-async function deleteRecord(type,id){const name=type.slice(0,-1);if(!confirm('Are you sure you want to delete this '+name+'?'))return;try{await api(API+'/'+type+'/'+id,{method:'DELETE'});showMessage(name.charAt(0).toUpperCase()+name.slice(1)+' deleted successfully.');loadData()}catch(e){showMessage(e.message,false)}}
-async function convertLead(id){if(!confirm('Convert this lead into a client?'))return;try{await api(API+'/leads/'+id+'/convert',{method:'POST'});showMessage('Lead converted to client.');loadData()}catch(e){showMessage(e.message,false)}}
+function money(value) {
 
-checkAuth();
+  const n = Number(value || 0);
+
+  return '₹' + n.toLocaleString('en-IN', {
+    maximumFractionDigits: 2
+  });
+
+}
+
+
+function todayString() {
+
+  const d = new Date();
+
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+
+  return `${d.getFullYear()}-${month}-${day}`;
+
+}
+
+
+function formatDate(value) {
+
+  if (!value) return '-';
+
+  const d = new Date(value + 'T00:00:00');
+
+  if (Number.isNaN(d.getTime())) return value;
+
+  return d.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+
+}
+
+
+function statusBadge(status) {
+
+  const s = String(status || '').toUpperCase();
+
+  let cls = 'bg-slate-100 text-slate-700';
+
+  if (['WON', 'PAID', 'COMPLETED'].includes(s)) {
+    cls = 'bg-green-100 text-green-700';
+  }
+
+  else if (['FOLLOW_UP', 'PARTIAL', 'IN_PROGRESS'].includes(s)) {
+    cls = 'bg-blue-100 text-blue-700';
+  }
+
+  else if (['NEW', 'PENDING'].includes(s)) {
+    cls = 'bg-orange-100 text-orange-700';
+  }
+
+  else if (['LOST', 'CANCELLED'].includes(s)) {
+    cls = 'bg-red-100 text-red-700';
+  }
+
+  return `<span class="badge ${cls}">${esc(s.replaceAll('_', ' '))}</span>`;
+
+}
+
+
+function toast(message, type = 'success') {
+
+  const el = document.getElementById('toast');
+
+  el.className =
+    'toast fixed right-5 bottom-5 z-[200] min-w-[280px] max-w-sm rounded-xl shadow-xl p-4 text-sm font-semibold';
+
+  if (type === 'error') {
+    el.classList.add('bg-red-600', 'text-white');
+  } else {
+    el.classList.add('bg-slate-900', 'text-white');
+  }
+
+  el.textContent = message;
+
+  setTimeout(() => {
+    el.classList.add('hidden');
+  }, 3000);
+
+}
+
+
+async function getJson(url, options = {}) {
+
+  try {
+
+    const response = await fetch(url, {
+      credentials: 'include',
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      }
+    });
+
+    if (response.status === 401) {
+
+      showLogin();
+
+      throw new Error('Session expired');
+
+    }
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error ||
+        data.message ||
+        'Something went wrong'
+      );
+
+    }
+
+    return data;
+
+  } catch (error) {
+
+    if (error.message !== 'Session expired') {
+      console.error(error);
+    }
+
+    throw error;
+
+  }
+
+}
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+async function checkAuth() {
+
+  try {
+
+    const result = await getJson(`${API}/auth/check`);
+
+    if (result.authenticated) {
+      showApp();
+      await loadAllData();
+    } else {
+      showLogin();
+    }
+
+  } catch (error) {
+
+    showLogin();
+
+  }
+
+}
+
+
+async function login(event) {
+
+  event.preventDefault();
+
+  const username =
+    document.getElementById('login-username').value.trim();
+
+  const password =
+    document.getElementById('login-password').value;
+
+  const errorBox =
+    document.getElementById('login-error');
+
+  const button =
+    document.getElementById('login-button');
+
+  errorBox.classList.add('hidden');
+
+  button.disabled = true;
+  button.textContent = 'Signing in...';
+
+  try {
+
+    await getJson(`${API}/login`, {
+
+      method: 'POST',
+
+      body: JSON.stringify({
+        username,
+        password
+      })
+
+    });
+
+    document.getElementById('login-password').value = '';
+
+    showApp();
+
+    await loadAllData();
+
+  } catch (error) {
+
+    errorBox.textContent =
+      error.message || 'Invalid username or password';
+
+    errorBox.classList.remove('hidden');
+
+  } finally {
+
+    button.disabled = false;
+    button.textContent = 'Sign In';
+
+  }
+
+}
+
+
+async function logout() {
+
+  try {
+
+    await fetch(`${API}/logout`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+
+  } catch (error) {
+    console.error(error);
+  }
+
+  showLogin();
+
+}
+
+
+function showLogin() {
+
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app').classList.add('hidden');
+
+}
+
+
+function showApp() {
+
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+function showPage(page) {
+
+  currentPage = page;
+
+  document.querySelectorAll('.page-section')
+    .forEach(section => section.classList.add('hidden'));
+
+  const section =
+    document.getElementById(`page-${page}`);
+
+  if (section) {
+    section.classList.remove('hidden');
+  }
+
+  document.querySelectorAll('.sidebar-btn')
+    .forEach(button => {
+
+      button.classList.remove('active');
+
+      if (button.dataset.page === page) {
+        button.classList.add('active');
+      }
+
+    });
+
+
+  const titles = {
+
+    dashboard: [
+      'Dashboard',
+      'Overview of your business'
+    ],
+
+    leads: [
+      'Leads / CRM',
+      'Manage your sales pipeline'
+    ],
+
+    followups: [
+      'Follow-ups',
+      'Manage customer follow-ups'
+    ],
+
+    clients: [
+      'Clients',
+      'Manage your customers'
+    ],
+
+    projects: [
+      'Projects',
+      'Manage client projects'
+    ],
+
+    invoices: [
+      'Invoices',
+      'Manage billing and invoices'
+    ]
+
+  };
+
+
+  document.getElementById('page-title').textContent =
+    titles[page][0];
+
+  document.getElementById('page-subtitle').textContent =
+    titles[page][1];
+
+  closeMobileSidebar();
+
+  renderCurrentPage();
+
+}
+
+
+function renderCurrentPage() {
+
+  if (currentPage === 'dashboard') renderDashboard();
+
+  if (currentPage === 'leads') renderLeads();
+
+  if (currentPage === 'followups') renderFollowups();
+
+  if (currentPage === 'clients') renderClients();
+
+  if (currentPage === 'projects') renderProjects();
+
+  if (currentPage === 'invoices') renderInvoices();
+
+}
+
+
+function openMobileSidebar() {
+
+  const sidebar =
+    document.getElementById('sidebar');
+
+  const overlay =
+    document.getElementById('mobile-overlay');
+
+  sidebar.classList.add('mobile-sidebar', 'open');
+
+  overlay.classList.remove('hidden');
+
+}
+
+
+function closeMobileSidebar() {
+
+  const sidebar =
+    document.getElementById('sidebar');
+
+  const overlay =
+    document.getElementById('mobile-overlay');
+
+  sidebar.classList.remove('open');
+
+  overlay.classList.add('hidden');
+
+}
+
+
+/* =========================================================
+   LOAD DATA
+========================================================= */
+
+async function loadAllData() {
+
+  try {
+
+    const results = await Promise.all([
+
+      getJson(`${API}/leads`),
+
+      getJson(`${API}/clients`),
+
+      getJson(`${API}/projects`),
+
+      getJson(`${API}/invoices`),
+
+      getJson(`${API}/followups`)
+
+    ]);
+
+    leadsData = Array.isArray(results[0])
+      ? results[0]
+      : [];
+
+    clientsData = Array.isArray(results[1])
+      ? results[1]
+      : [];
+
+    projectsData = Array.isArray(results[2])
+      ? results[2]
+      : [];
+
+    invoicesData = Array.isArray(results[3])
+      ? results[3]
+      : [];
+
+    followupsData = Array.isArray(results[4])
+      ? results[4]
+      : [];
+
+    await loadStats();
+
+    renderCurrentPage();
+
+    renderDashboard();
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
+
+}
+
+
+async function loadStats() {
+
+  try {
+
+    const stats =
+      await getJson(`${API}/stats`);
+
+    document.getElementById('stat-leads').textContent =
+      stats.total_leads || 0;
+
+    document.getElementById('stat-clients').textContent =
+      stats.total_clients || 0;
+
+    document.getElementById('stat-projects').textContent =
+      stats.active_projects || 0;
+
+    document.getElementById('stat-revenue').textContent =
+      money(stats.total_revenue || 0);
+
+    document.getElementById('stat-followups').textContent =
+      stats.follow_up_leads || followupsData.length || 0;
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
+
+}
+
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+function renderDashboard() {
+
+  renderDashboardFollowups();
+
+  renderDashboardLeads();
+
+}
+
+
+function renderDashboardFollowups() {
+
+  const container =
+    document.getElementById('dashboard-followups');
+
+  const data =
+    [...followupsData]
+      .sort((a, b) =>
+        String(a.follow_up_date || '')
+          .localeCompare(String(b.follow_up_date || ''))
+      )
+      .slice(0, 5);
+
+  if (!data.length) {
+
+    container.innerHTML = `
+      <div class="p-7 text-center">
+        <div class="text-3xl mb-2">✅</div>
+        <div class="font-bold text-slate-700">
+          No pending follow-ups
+        </div>
+        <div class="text-sm text-slate-400 mt-1">
+          Great! You're all caught up.
+        </div>
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  container.innerHTML = data.map(item => {
+
+    const overdue =
+      item.follow_up_date &&
+      item.follow_up_date < todayString();
+
+    return `
+
+      <div class="p-4 flex items-center justify-between gap-3">
+
+        <div class="min-w-0">
+
+          <div class="font-bold truncate">
+            ${esc(item.name)}
+          </div>
+
+          <div class="text-xs text-slate-500 truncate">
+            ${esc(item.service || '')}
+          </div>
+
+        </div>
+
+        <div class="text-right shrink-0">
+
+          <div class="text-xs font-bold ${overdue ? 'text-red-600' : 'text-blue-600'}">
+            ${formatDate(item.follow_up_date)}
+          </div>
+
+          <div class="text-[11px] text-slate-400">
+            ${overdue ? 'Overdue' : 'Follow-up'}
+          </div>
+
+        </div>
+
+      </div>
+    `;
+
+  }).join('');
+
+}
+
+
+function renderDashboardLeads() {
+
+  const container =
+    document.getElementById('dashboard-leads');
+
+  const data =
+    leadsData.slice(0, 5);
+
+  if (!data.length) {
+
+    container.innerHTML = `
+      <div class="p-7 text-center text-slate-400">
+        No leads yet.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  container.innerHTML = data.map(item => `
+
+    <div class="p-4 flex items-center justify-between gap-3">
+
+      <div class="min-w-0">
+
+        <div class="font-bold truncate">
+          ${esc(item.name)}
+        </div>
+
+        <div class="text-xs text-slate-500 truncate">
+          ${esc(item.company || item.service || '')}
+        </div>
+
+      </div>
+
+      <div class="shrink-0">
+        ${statusBadge(item.status)}
+      </div>
+
+    </div>
+
+  `).join('');
+
+}
+
+
+/* =========================================================
+   LEADS
+========================================================= */
+
+function renderLeads() {
+
+  const table =
+    document.getElementById('leads-table');
+
+  if (!table) return;
+
+  const search =
+    (document.getElementById('lead-search')?.value || '')
+      .toLowerCase()
+      .trim();
+
+  const status =
+    document.getElementById('lead-status-filter')?.value || '';
+
+  let data =
+    leadsData.filter(item => {
+
+      const text = [
+        item.name,
+        item.company,
+        item.phone,
+        item.email,
+        item.service
+      ]
+      .join(' ')
+      .toLowerCase();
+
+      const matchesSearch =
+        !search || text.includes(search);
+
+      const matchesStatus =
+        !status || item.status === status;
+
+      return matchesSearch && matchesStatus;
+
+    });
+
+
+  if (!data.length) {
+
+    table.innerHTML = `
+      <tr>
+        <td colspan="7" class="px-5 py-12 text-center text-slate-400">
+          No leads found.
+        </td>
+      </tr>
+    `;
+
+    return;
+
+  }
+
+
+  table.innerHTML = data.map(item => `
+
+    <tr class="border-t border-slate-100 hover:bg-slate-50">
+
+      <td class="px-5 py-4">
+
+        <div class="font-bold">
+          ${esc(item.name)}
+        </div>
+
+        <div class="text-xs text-slate-400">
+          ${esc(item.company || '')}
+        </div>
+
+      </td>
+
+
+      <td class="px-5 py-4">
+
+        <div>
+          ${esc(item.phone)}
+        </div>
+
+        <div class="text-xs text-slate-400">
+          ${esc(item.email || '')}
+        </div>
+
+      </td>
+
+
+      <td class="px-5 py-4">
+        ${esc(item.service || '-')}
+      </td>
+
+
+      <td class="px-5 py-4 font-semibold">
+        ${money(item.expected_value)}
+      </td>
+
+
+      <td class="px-5 py-4">
+        ${statusBadge(item.status)}
+      </td>
+
+
+      <td class="px-5 py-4">
+
+        ${
+          item.follow_up_date
+          ? `
+            <div class="font-semibold ${
+              item.follow_up_date < todayString()
+              ? 'text-red-600'
+              : 'text-slate-700'
+            }">
+              ${formatDate(item.follow_up_date)}
+            </div>
+
+            <div class="text-xs text-slate-400 max-w-[160px] truncate">
+              ${esc(item.follow_up_note || '')}
+            </div>
+          `
+          : '<span class="text-slate-400">-</span>'
+        }
+
+      </td>
+
+
+      <td class="px-5 py-4">
+
+        <div class="flex justify-end gap-1">
+
+          <button
+            onclick="editLead(${item.id})"
+            title="Edit"
+            class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100"
+          >
+            ✏️
+          </button>
+
+          ${
+            item.status !== 'WON'
+            ? `
+              <button
+                onclick="convertLead(${item.id})"
+                title="Convert to client"
+                class="w-8 h-8 rounded-lg bg-green-50 text-green-600 hover:bg-green-100"
+              >
+                🔄
+              </button>
+            `
+            : ''
+          }
+
+          <button
+            onclick="deleteLead(${item.id})"
+            title="Delete"
+            class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-100"
+          >
+            🗑️
+          </button>
+
+        </div>
+
+      </td>
+
+    </tr>
+
+  `).join('');
+
+}
+
+
+/* =========================================================
+   LEAD MODAL
+========================================================= */
+
+function openLeadModal(id = null) {
+
+  const form =
+    document.getElementById('lead-form');
+
+  form.reset();
+
+  document.getElementById('lead-id').value = '';
+
+  document.getElementById('lead-status').value = 'NEW';
+
+  document.getElementById('lead-modal-title').textContent =
+    id ? 'Edit Lead' : 'Add Lead';
+
+  if (id) {
+
+    const item =
+      leadsData.find(x => Number(x.id) === Number(id));
+
+    if (!item) return;
+
+    document.getElementById('lead-id').value = item.id;
+
+    document.getElementById('lead-name').value =
+      item.name || '';
+
+    document.getElementById('lead-company').value =
+      item.company || '';
+
+    document.getElementById('lead-phone').value =
+      item.phone || '';
+
+    document.getElementById('lead-email').value =
+      item.email || '';
+
+    document.getElementById('lead-service').value =
+      item.service || '';
+
+    document.getElementById('lead-value').value =
+      item.expected_value || 0;
+
+    document.getElementById('lead-status').value =
+      item.status || 'NEW';
+
+    document.getElementById('lead-follow-date').value =
+      item.follow_up_date || '';
+
+    document.getElementById('lead-follow-note').value =
+      item.follow_up_note || '';
+
+  }
+
+
+  openModal('lead-modal');
+
+}
+
+
+async function saveLead(event) {
+
+  event.preventDefault();
+
+  const id =
+    document.getElementById('lead-id').value;
+
+  const body = {
+
+    name:
+      document.getElementById('lead-name').value.trim(),
+
+    company:
+      document.getElementById('lead-company').value.trim(),
+
+    phone:
+      document.getElementById('lead-phone').value.trim(),
+
+    email:
+      document.getElementById('lead-email').value.trim(),
+
+    service:
+      document.getElementById('lead-service').value.trim(),
+
+    expected_value:
+      Number(document.getElementById('lead-value').value || 0),
+
+    status:
+      document.getElementById('lead-status').value,
+
+    follow_up_date:
+      document.getElementById('lead-follow-date').value || null,
+
+    follow_up_note:
+      document.getElementById('lead-follow-note').value.trim() || null
+
+  };
+
+
+  try {
+
+    await getJson(
+      id
+      ? `${API}/leads/${id}`
+      : `${API}/leads`,
+      {
+
+        method: id ? 'PUT' : 'POST',
+
+        body: JSON.stringify(body)
+
+      }
+    );
+
+
+    closeModal('lead-modal');
+
+    toast(
+      id
+      ? 'Lead updated successfully'
+      : 'Lead added successfully'
+    );
+
+    await loadAllData();
+
+  } catch (error) {
+
+    toast(error.message, 'error');
+
+  }
+
+}
+
+
+function editLead(id) {
+
+  openLeadModal(id);
+
+}
+
+
+async function deleteLead(id) {
+
+  if (!confirm('Delete this lead?')) return;
+
+  try {
+
+    await getJson(`${API}/leads/${id}`, {
+      method: 'DELETE'
+    });
+
+    toast('Lead deleted');
+
+    await loadAllData();
+
+  } catch (error) {
+
+    toast(error.message, 'error');
+
+  }
+
+}
+
+
+async function convertLead(id) {
+
+  if (!confirm('Convert this lead into a client?')) return;
+
+  try {
+
+    await getJson(`${API}/leads/${id}/convert`, {
+      method: 'POST'
+    });
+
+    toast('Lead converted to client');
+
+    await loadAllData();
+
+  } catch (error) {
+
+    toast(error.message, 'error');
+
+  }
+
+}
+
+
+/* =========================================================
+   FOLLOW UPS
+========================================================= */
+
+function renderFollowups() {
+
+  const table =
+    document.getElementById('followups-table');
+
+  if (!table) return;
+
+  const today =
+    todayString();
+
+  let overdue = 0;
+  let todayCount = 0;
+  let upcoming = 0;
+
+
+  followupsData.forEach(item => {
+
+    if (!item.follow_up_date) return;
+
+    if (item.follow_up_date < today) overdue++;
+
+    else if (item.follow_up_date === today) todayCount++;
+
+    else upcoming++;
+
+  });
+
+
+  document.getElementById('followup-overdue').textContent =
+    overdue;
+
+  document.getElementById('followup-today').textContent =
+    todayCount;
+
+  document.getElementById('followup-upcoming').textContent =
+    upcoming;
+
+
+  const data =
+    [...followupsData]
+      .sort((a, b) =>
+        String(a.follow_up_date || '')
+          .localeCompare(String(b.follow_up_date || ''))
+      );
+
+
+  if (!data.length) {
+
+    table.innerHTML = `
+      <tr>
+        <td colspan="6" class="px-5 py-12 text-center text-slate-400">
+          No follow-ups available.
+        </td>
+      </tr>
+    `;
+
+    return;
+
+  }
+
+
+  table.innerHTML = data.map(item => {
+
+    const overdue =
+      item.follow_up_date &&
+      item.follow_up_date < today;
+
+    return `
+
+      <tr class="border-t border-slate-100 hover:bg-slate-50">
+
+        <td class="px-5 py-4">
+
+          <div class="font-bold">
+            ${esc(item.name)}
+          </div>
+
+          <div class="text-xs text-slate-400">
+            ${esc(item.company || '')}
+          </div>
+
+        </td>
+
+        <td class="px-5 py-4">
+          ${esc(item.phone || '-')}
+        </td>
+
+        <td class="px-5 py-4">
+          ${esc(item.service || '-')}
+        </td>
+
+        <td class="px-5 py-4 font-semibold ${
+          overdue ? 'text-red-600' : ''
+        }">
+          ${formatDate(item.follow_up_date)}
+        </td>
+
+        <td class="px-5 py-4 max-w-[250px]">
+          <div class="truncate">
+            ${esc(item.follow_up_note || '-')}
+          </div>
+        </td>
+
+        <td class="px-5 py-4 text-right">
+
+          <button
+            onclick="editLead(${item.id})"
+            class="px-3 py-2 rounded-lg bg-blue-50 text-blue-600 text-xs font-bold"
+          >
+            Edit
+          </button>
+
+        </td>
+
+      </tr>
+
+    `;
+
+  }).join('');
+
+}
+
+
+function exportFollowupsExcel() {
+
+  exportToExcel(
+    followupsData.map(item => ({
+
+      Name: item.name || '',
+      Company: item.company || '',
+      Phone: item.phone || '',
+      Email: item.email || '',
+      Service: item.service || '',
+      'Follow-up Date': item.follow_up_date || '',
+      'Follow-up Note': item.follow_up_note || '',
+      Status: item.status || ''
+
+    })),
+    'SYNICON_Followups'
+  );
+
+}
+
+
+/* =========================================================
+   CLIENTS
+========================================================= */
+
+function renderClients() {
+
+  const table =
+    document.getElementById('clients-table');
+
+  if (!table) return;
+
+  const search =
+    (document.getElementById('client-search')?.value || '')
+      .toLowerCase()
+      .trim();
+
+
+  const data =
+    clientsData.filter(item => {
+
+      const text = [
+        item.name,
+        item.company,
+        item.phone,
+        item.email,
+        item.state
+      ]
+      .join(' ')
+      .toLowerCase();
+
+      return !search || text.includes(search);
+
+    });
+
+
+  if (!data.length) {
+
+    table.innerHTML = `
+      <tr>
+        <td colspan="6" class="px-5 py-12 text-center text-slate-400">
+          No clients found.
+        </td>
+      </tr>
+    `;
+
+    return;
+
+  }
+
+
+  table.innerHTML = data.map(item => {
+
+    const projectCount =
+      projectsData.filter(
+        p =>
+          String(p.client_name || '').toLowerCase() ===
+          String(item.name || '').toLowerCase()
+      ).length;
+
+
+    return `
+
+      <tr class="border-t border-slate-100 hover:bg-slate-50">
+
+        <td class="px-5 py-4">
+
+          <div class="font-bold">
+            ${esc(item.name)}
+          </div>
+
+        </td>
+
+        <td class="px-5 py-4">
+          ${esc(item.company || '-')}
+        </td>
+
+        <td class="px-5 py-4">
+          ${esc(item.phone || '-')}
+        </td>
+
+        <td class="px-5 py-4">
+          ${esc(item.email || '-')}
+        </td>
+
+        <td class="px-5 py-4">
+          <span class="badge bg-purple-100 text-purple-700">
+            ${projectCount}
+          </span>
+        </td>
+
+        <td class="px-5 py-4">
+
+          <div class="flex justify-end gap-1">
+
+            <button
+              onclick="editClient(${item.id})"
+              class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600"
+            >
+              ✏️
+            </button>
+
+            <button
+              onclick="deleteClient(${item.id})"
+              class="w-8 h-8 rounded-lg bg-red-50 text-red-600"
+            >
+              🗑️
+            </button>
+
+          </div>
+
+        </td>
+
+      </tr>
+
+    `;
+
+  }).join('');
+
+}
+
+
+function openClientModal(id = null) {
+
+  document.getElementById('client-form').reset();
+
+  document.getElementById('client-id').value = '';
+
+  document.getElementById('client-state').value =
+    'Maharashtra';
+
+  document.getElementById('client-modal-title').textContent =
+    id ? 'Edit Client' : 'Add Client';
+
+
+  if (id) {
+
+    const item =
+      clientsData.find(x => Number(x.id) === Number(id));
+
+    if (!item) return;
+
+    document.getElementById('client-id').value =
+      item.id;
+
+    document.getElementById('client-name').value =
+      item.name || '';
+
+    document.getElementById('client-company').value =
+      item.company || '';
+
+    document.getElementById('client-phone').value =
+      item.phone || '';
+
+    document.getElementById('client-email').value =
+      item.email || '';
+
+    document.getElementById('client-state').value =
+      item.state || 'Maharashtra';
+
+  }
+
+
+  openModal('client-modal');
+
+}
+
+
+function editClient(id) {
+
+  openClientModal(id);
+
+}
+
+
+async function saveClient(event) {
+
+  event.preventDefault();
+
+  const id =
+    document.getElementById('client-id').value;
+
+  const body = {
+
+    name:
+      document.getElementById('client-name').value.trim(),
+
+    company:
+      document.getElementById('client-company').value.trim(),
+
+    phone:
+      document.getElementById('client-phone').value.trim(),
+
+    email:
+      document.getElementById('client-email').value.trim(),
+
+    state:
+      document.getElementById('client-state').value.trim()
+
+  };
+
+
+  try {
+
+    await getJson(
+      id
+      ? `${API}/clients/${id}`
+      : `${API}/clients`,
+      {
+
+        method: id ? 'PUT' : 'POST',
+
+        body: JSON.stringify(body)
+
+      }
+    );
+
+
+    closeModal('client-modal');
+
+    toast(
+      id
+      ? 'Client updated successfully'
+      : 'Client added successfully'
+    );
+
+    await loadAllData();
+
+  } catch (error) {
+
+    toast(error.message, 'error');
+
+  }
+
+}
+
+
+async function deleteClient(id) {
+
+  if (!confirm('Delete this client?')) return;
+
+  try {
+
+    await getJson(`${API}/clients/${id}`, {
+      method: 'DELETE'
+    });
+
+    toast('Client deleted');
+
+    await loadAllData();
+
+  } catch (error) {
+
+    toast(error.message, 'error');
+
+  }
+
+}
+
+
+/* =========================================================
+   PROJECTS
+========================================================= */
+
+function renderProjects() {
+
+  const table =
+    document.getElementById('projects-table');
+
+  if (!table) return;
+
+  const search =
+    (document.getElementById('project-search')?.value || '')
+      .toLowerCase()
+      .trim();
+
+  const status =
+    document.getElementById('project-status-filter')?.value || '';
+
+
+  const data =
+    projectsData.filter(item => {
+
+      const text = [
+        item.title,
+        item.client_name,
+        item.service
+      ]
+      .join(' ')
+      .toLowerCase();
+
+      const matchesSearch =
+        !search || text.includes(search);
+
+      const matchesStatus =
+        !status || item.status === status;
+
+      return matchesSearch && matchesStatus;
+
+    });
+
+
+  if (!data.length) {
+
+    table.innerHTML = `
+      <tr>
+        <td colspan="7" class="px-5 py-12 text-center text-slate-400">
+          No projects found.
+        </td>
+      </tr>
+    `;
+
+    return;
+
+  }
+
+
+  table.innerHTML = data.map(item => `
+
+    <tr class="border-t border-slate-100 hover:bg-slate-50">
+
+      <td class="px-5 py-4 font-bold">
+        ${esc(item.title)}
+      </td>
+
+      <td class="px-5 py-4">
+        ${esc(item.client_name)}
+      </td>
+
+      <td class="px-5 py-4">
+        ${esc(item.service || '-')}
+      </td>
+
+      <td class="px-5 py-4 font-semibold">
+        ${money(item.budget)}
+      </td>
+
+      <td class="px-5 py-4">
+        ${statusBadge(item.status)}
+      </td>
+
+      <td class="px-5 py-4">
+        ${formatDate(item.deadline)}
+      </td>
+
+      <td class="px-5 py-4">
+
+        <div class="flex justify-end gap-1">
+
+          <button
+            onclick="editProject(${item.id})"
+            class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600"
+          >
+            ✏️
+          </button>
+
+          <button
+            onclick="deleteProject(${item.id})"
+            class="w-8 h-8 rounded-lg bg-red-50 text-red-600"
+          >
+            🗑️
+          </button>
+
+        </div>
+
+      </td>
+
+    </tr>
+
+  `).join('');
+
+}
+
+
+function openProjectModal(id = null) {
+
+  document.getElementById('project-form').reset();
+
+  document.getElementById('project-id').value = '';
+
+  document.getElementById('project-status').value =
+    'IN_PROGRESS';
+
+  document.getElementById('project-modal-title').textContent =
+    id ? 'Edit Project' : 'New Project';
+
+
+  if (id) {
+
+    const item =
+      projectsData.find(x => Number(x.id) === Number(id));
+
+    if (!item) return;
+
+    document.getElementById('project-id').value =
+      item.id;
+
+    document.getElementById('project-title').value =
+      item.title || '';
+
+    document.getElementById('project-client').value =
+      item.client_name || '';
+
+    document.getElementById('project-service').value =
+      item.service || '';
+
+    document.getElementById('project-budget').value =
+      item.budget || 0;
+
+    document.getElementById('project-status').value =
+      item.status || 'IN_PROGRESS';
+
+    document.getElementById('project-deadline').value =
+      item.deadline || '';
+
+  }
+
+
+  openModal('project-modal');
+
+}
+
+
+function editProject(id) {
+
+  openProjectModal(id);
+
+}
+
+
+async function saveProject(event) {
+
+  event.preventDefault();
+
+  const id =
+    document.getElementById('project-id').value;
+
+  const body = {
+
+    title:
+      document.getElementById('project-title').value.trim(),
+
+    client_name:
+      document.getElementById('project-client').value.trim(),
+
+    service:
+      document.getElementById('project-service').value.trim(),
+
+    budget:
+      Number(document.getElementById('project-budget').value || 0),
+
+    status:
+      document.getElementById('project-status').value,
+
+    deadline:
+      document.getElementById('project-deadline').value || null
+
+  };
+
+
+  try {
+
+    await getJson(
+      id
+      ? `${API}/projects/${id}`
+      : `${API}/projects`,
+      {
+
+        method: id ? 'PUT' : 'POST',
+
+        body: JSON.stringify(body)
+
+      }
+    );
+
+
+    closeModal('project-modal');
+
+    toast(
+      id
+      ? 'Project updated successfully'
+      : 'Project created successfully'
+    );
+
+    await loadAllData();
+
+  } catch (error) {
+
+    toast(error.message, 'error');
+
+  }
+
+}
+
+
+async function deleteProject(id) {
+
+  if (!confirm('Delete this project?')) return;
+
+  try {
+
+    await getJson(`${API}/projects/${id}`, {
+      method: 'DELETE'
+    });
+
+    toast('Project deleted');
+
+    await loadAllData();
+
+  } catch (error) {
+
+    toast(error.message, 'error');
+
+  }
+
+}
+
+
+/* =========================================================
+   INVOICES
+========================================================= */
+
+function renderInvoices() {
+
+  const table =
+    document.getElementById('invoices-table');
+
+  if (!table) return;
+
+  const search =
+    (document.getElementById('invoice-search')?.value || '')
+      .toLowerCase()
+      .trim();
+
+  const status =
+    document.getElementById('invoice-status-filter')?.value || '';
+
+
+  const data =
+    invoicesData.filter(item => {
+
+      const text = [
+        item.invoice_number,
+        item.client_name
+      ]
+      .join(' ')
+      .toLowerCase();
+
+      const matchesSearch =
+        !search || text.includes(search);
+
+      const matchesStatus =
+        !status || item.status === status;
+
+      return matchesSearch && matchesStatus;
+
+    });
+
+
+  if (!data.length) {
+
+    table.innerHTML = `
+      <tr>
+        <td colspan="6" class="px-5 py-12 text-center text-slate-400">
+          No invoices found.
+        </td>
+      </tr>
+    `;
+
+    return;
+
+  }
+
+
+  table.innerHTML = data.map(item => `
+
+    <tr class="border-t border-slate-100 hover:bg-slate-50">
+
+      <td class="px-5 py-4">
+
+        <div class="font-bold">
+          ${esc(item.invoice_number || `INV-${item.id}`)}
+        </div>
+
+      </td>
+
+      <td class="px-5 py-4">
+        ${esc(item.client_name)}
+      </td>
+
+      <td class="px-5 py-4">
+        ${formatDate(item.date)}
+      </td>
+
+      <td class="px-5 py-4 font-bold">
+        ${money(item.grand_total)}
+      </td>
+
+      <td class="px-5 py-4">
+        ${statusBadge(item.status)}
+      </td>
+
+      <td class="px-5 py-4">
+
+        <div class="flex justify-end gap-1">
+
+          <button
+            onclick="downloadInvoicePDF(${item.id})"
+            title="PDF"
+            class="w-8 h-8 rounded-lg bg-red-50 text-red-600"
+          >
+            📄
+          </button>
+
+          <button
+            onclick="printInvoice(${item.id})"
+            title="Print"
+            class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700"
+          >
+            🖨️
+          </button>
+
+          <button
+            onclick="editInvoice(${item.id})"
+            title="Edit"
+            class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600"
+          >
+            ✏️
+          </button>
+
+          <button
+            onclick="deleteInvoice(${item.id})"
+            title="Delete"
+            class="w-8 h-8 rounded-lg bg-red-50 text-red-600"
+          >
+            🗑️
+          </button>
+
+        </div>
+
+      </td>
+
+    </tr>
+
+  `).join('');
+
+}
+
+
+function openInvoiceModal(id = null) {
+
+  document.getElementById('invoice-form').reset();
+
+  document.getElementById('invoice-id').value = '';
+
+  document.getElementById('invoice-date').value =
+    todayString();
+
+  document.getElementById('invoice-status').value =
+    'PENDING';
+
+  document.getElementById('invoice-modal-title').textContent =
+    id ? 'Edit Invoice' : 'New Invoice';
+
+
+  if (id) {
+
+    const item =
+      invoicesData.find(x => Number(x.id) === Number(id));
+
+    if (!item) return;
+
+    document.getElementById('invoice-id').value =
+      item.id;
+
+    document.getElementById('invoice-client').value =
+      item.client_name || '';
+
+    document.getElementById('invoice-date').value =
+      item.date || todayString();
+
+    document.getElementById('invoice-amount').value =
+      item.grand_total || 0;
+
+    document.getElementById('invoice-status').value =
+      item.status || 'PENDING';
+
+  }
+
+
+  openModal('invoice-modal');
+
+}
+
+
+function editInvoice(id) {
+
+  openInvoiceModal(id);
+
+}
+
+
+async function saveInvoice(event) {
+
+  event.preventDefault();
+
+  const id =
+    document.getElementById('invoice-id').value;
+
+  const body = {
+
+    client_name:
+      document.getElementById('invoice-client').value.trim(),
+
+    amount:
+      Number(document.getElementById('invoice-amount').value || 0),
+
+    taxable_amount:
+      Number(document.getElementById('invoice-amount').value || 0),
+
+    status:
+      document.getElementById('invoice-status').value,
+
+    date:
+      document.getElementById('invoice-date').value ||
+      todayString()
+
+  };
+
+
+  try {
+
+    await getJson(
+      id
+      ? `${API}/invoices/${id}`
+      : `${API}/invoices`,
+      {
+
+        method: id ? 'PUT' : 'POST',
+
+        body: JSON.stringify(body)
+
+      }
+    );
+
+
+    closeModal('invoice-modal');
+
+    toast(
+      id
+      ? 'Invoice updated successfully'
+      : 'Invoice created successfully'
+    );
+
+    await loadAllData();
+
+  } catch (error) {
+
+    toast(error.message, 'error');
+
+  }
+
+}
+
+
+async function deleteInvoice(id) {
+
+  if (!confirm('Delete this invoice?')) return;
+
+  try {
+
+    await getJson(`${API}/invoices/${id}`, {
+      method: 'DELETE'
+    });
+
+    toast('Invoice deleted');
+
+    await loadAllData();
+
+  } catch (error) {
+
+    toast(error.message, 'error');
+
+  }
+
+}
+
+
+/* =========================================================
+   PDF INVOICE
+========================================================= */
+
+function downloadInvoicePDF(id) {
+
+  const invoice =
+    invoicesData.find(
+      x => Number(x.id) === Number(id)
+    );
+
+  if (!invoice) {
+
+    toast('Invoice not found', 'error');
+
+    return;
+
+  }
+
+
+  const {
+    jsPDF
+  } = window.jspdf;
+
+  const doc =
+    new jsPDF();
+
+
+  const amount =
+    Number(invoice.grand_total || 0);
+
+
+  /* HEADER */
+
+  doc.setFillColor(15, 23, 42);
+
+  doc.rect(
+    0,
+    0,
+    210,
+    38,
+    'F'
+  );
+
+
+  doc.setTextColor(255,255,255);
+
+  doc.setFontSize(22);
+
+  doc.setFont(undefined, 'bold');
+
+  doc.text(
+    'SYNICON',
+    15,
+    18
+  );
+
+
+  doc.setFontSize(10);
+
+  doc.setFont(undefined, 'normal');
+
+  doc.text(
+    'IT SOLUTIONS',
+    15,
+    25
+  );
+
+
+  doc.setFontSize(20);
+
+  doc.setFont(undefined, 'bold');
+
+  doc.text(
+    'INVOICE',
+    150,
+    20
+  );
+
+
+  doc.setTextColor(30,41,59);
+
+
+  /* INVOICE INFO */
+
+  doc.setFontSize(10);
+
+  doc.setFont(undefined, 'normal');
+
+  doc.text(
+    `Invoice No: ${invoice.invoice_number || 'INV-' + invoice.id}`,
+    15,
+    52
+  );
+
+  doc.text(
+    `Date: ${formatDate(invoice.date)}`,
+    15,
+    59
+  );
+
+
+  /* CLIENT */
+
+  doc.setFont(undefined, 'bold');
+
+  doc.text(
+    'BILL TO',
+    15,
+    75
+  );
+
+  doc.setFont(undefined, 'normal');
+
+  doc.setFontSize(12);
+
+  doc.text(
+    invoice.client_name || '-',
+    15,
+    83
+  );
+
+
+  /* LINE */
+
+  doc.setDrawColor(200,200,200);
+
+  doc.line(
+    15,
+    98,
+    195,
+    98
+  );
+
+
+  /* TABLE HEADER */
+
+  doc.setFont(undefined, 'bold');
+
+  doc.setFontSize(10);
+
+  doc.text(
+    'Description',
+    15,
+    110
+  );
+
+  doc.text(
+    'Amount',
+    160,
+    110
+  );
+
+
+  doc.setFont(undefined, 'normal');
+
+  doc.text(
+    'Professional Services',
+    15,
+    120
+  );
+
+  doc.text(
+    money(amount),
+    160,
+    120
+  );
+
+
+  doc.line(
+    15,
+    130,
+    195,
+    130
+  );
+
+
+  doc.setFont(undefined, 'bold');
+
+  doc.text(
+    'TOTAL',
+    130,
+    145
+  );
+
+  doc.text(
+    money(amount),
+    160,
+    145
+  );
+
+
+  /* STATUS */
+
+  doc.setFont(undefined, 'normal');
+
+  doc.setFontSize(10);
+
+  doc.text(
+    `Status: ${String(invoice.status || 'PENDING').replaceAll('_',' ')}`,
+    15,
+    145
+  );
+
+
+  /* FOOTER */
+
+  doc.setFontSize(9);
+
+  doc.setTextColor(100,116,139);
+
+  doc.text(
+    'Thank you for doing business with SYNICON IT SOLUTIONS.',
+    15,
+    270
+  );
+
+  doc.text(
+    'This is a computer-generated invoice.',
+    15,
+    277
+  );
+
+
+  const filename =
+    `${invoice.invoice_number || 'Invoice'}.pdf`;
+
+  doc.save(filename);
+
+  toast('Invoice PDF downloaded');
+
+}
+
+
+/* =========================================================
+   PRINT INVOICE
+========================================================= */
+
+function printInvoice(id) {
+
+  const invoice =
+    invoicesData.find(
+      x => Number(x.id) === Number(id)
+    );
+
+  if (!invoice) return;
+
+
+  const html = `
+
+    <!DOCTYPE html>
+
+    <html>
+
+    <head>
+
+      <title>${esc(invoice.invoice_number || 'Invoice')}</title>
+
+      <style>
+
+        body {
+          font-family: Arial, sans-serif;
+          padding: 40px;
+          color: #111827;
+        }
+
+        .header {
+          display:flex;
+          justify-content:space-between;
+          border-bottom:2px solid #111827;
+          padding-bottom:20px;
+          margin-bottom:30px;
+        }
+
+        .brand {
+          font-size:24px;
+          font-weight:bold;
+        }
+
+        .invoice {
+          font-size:25px;
+          font-weight:bold;
+        }
+
+        table {
+          width:100%;
+          border-collapse:collapse;
+          margin-top:30px;
+        }
+
+        th,td {
+          border:1px solid #ddd;
+          padding:12px;
+          text-align:left;
+        }
+
+        th {
+          background:#f1f5f9;
+        }
+
+        .total {
+          text-align:right;
+          margin-top:25px;
+          font-size:20px;
+          font-weight:bold;
+        }
+
+        .footer {
+          margin-top:100px;
+          font-size:12px;
+          color:#64748b;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <div class="header">
+
+        <div>
+          <div class="brand">
+            SYNICON
+          </div>
+
+          <div>
+            IT SOLUTIONS
+          </div>
+        </div>
+
+        <div class="invoice">
+          INVOICE
+        </div>
+
+      </div>
+
+
+      <p>
+        <strong>Invoice No:</strong>
+        ${esc(invoice.invoice_number || '-')}
+      </p>
+
+      <p>
+        <strong>Date:</strong>
+        ${formatDate(invoice.date)}
+      </p>
+
+      <p>
+        <strong>Bill To:</strong>
+        ${esc(invoice.client_name || '-')}
+      </p>
+
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>Description</th>
+            <th>Amount</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <tr>
+            <td>Professional Services</td>
+            <td>${money(invoice.grand_total)}</td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+
+      <div class="total">
+        Total: ${money(invoice.grand_total)}
+      </div>
+
+
+      <div class="footer">
+        Thank you for doing business with SYNICON IT SOLUTIONS.
+      </div>
+
+
+      <script>
+        window.onload = function() {
+          window.print();
+        };
+      <\/script>
+
+    </body>
+
+    </html>
+  `;
+
+
+  const win =
+    window.open('', '_blank');
+
+  win.document.write(html);
+
+  win.document.close();
+
+}
+
+
+/* =========================================================
+   EXCEL EXPORT
+========================================================= */
+
+function exportToExcel(data, filename) {
+
+  if (!Array.isArray(data) || !data.length) {
+
+    toast('No data available for export', 'error');
+
+    return;
+
+  }
+
+
+  if (typeof XLSX === 'undefined') {
+
+    toast('Excel library not loaded', 'error');
+
+    return;
+
+  }
+
+
+  const worksheet =
+    XLSX.utils.json_to_sheet(data);
+
+
+  const workbook =
+    XLSX.utils.book_new();
+
+
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheet,
+    'Data'
+  );
+
+
+  XLSX.writeFile(
+    workbook,
+    `${filename}.xlsx`
+  );
+
+
+  toast(`${filename}.xlsx downloaded`);
+
+}
+
+
+function exportLeadsExcel() {
+
+  exportToExcel(
+
+    leadsData.map(item => ({
+
+      ID: item.id,
+      Name: item.name || '',
+      Company: item.company || '',
+      Phone: item.phone || '',
+      Email: item.email || '',
+      Service: item.service || '',
+      'Expected Value': Number(item.expected_value || 0),
+      Status: item.status || '',
+      'Follow-up Date': item.follow_up_date || '',
+      'Follow-up Note': item.follow_up_note || ''
+
+    })),
+
+    'SYNICON_Leads'
+
+  );
+
+}
+
+
+function exportClientsExcel() {
+
+  exportToExcel(
+
+    clientsData.map(item => ({
+
+      ID: item.id,
+      Name: item.name || '',
+      Company: item.company || '',
+      Phone: item.phone || '',
+      Email: item.email || '',
+      State: item.state || ''
+
+    })),
+
+    'SYNICON_Clients'
+
+  );
+
+}
+
+
+function exportProjectsExcel() {
+
+  exportToExcel(
+
+    projectsData.map(item => ({
+
+      ID: item.id,
+      Project: item.title || '',
+      Client: item.client_name || '',
+      Service: item.service || '',
+      Budget: Number(item.budget || 0),
+      Status: item.status || '',
+      Deadline: item.deadline || ''
+
+    })),
+
+    'SYNICON_Projects'
+
+  );
+
+}
+
+
+function exportInvoicesExcel() {
+
+  exportToExcel(
+
+    invoicesData.map(item => ({
+
+      ID: item.id,
+      'Invoice Number':
+        item.invoice_number || '',
+      Client:
+        item.client_name || '',
+      Date:
+        item.date || '',
+      Amount:
+        Number(item.grand_total || 0),
+      Status:
+        item.status || ''
+
+    })),
+
+    'SYNICON_Invoices'
+
+  );
+
+}
+
+
+function exportAllExcel() {
+
+  if (
+    !leadsData.length &&
+    !clientsData.length &&
+    !projectsData.length &&
+    !invoicesData.length
+  ) {
+
+    toast('No data available', 'error');
+
+    return;
+
+  }
+
+
+  const workbook =
+    XLSX.utils.book_new();
+
+
+  if (leadsData.length) {
+
+    const sheet =
+      XLSX.utils.json_to_sheet(
+
+        leadsData.map(item => ({
+
+          ID: item.id,
+          Name: item.name || '',
+          Company: item.company || '',
+          Phone: item.phone || '',
+          Email: item.email || '',
+          Service: item.service || '',
+          ExpectedValue:
+            Number(item.expected_value || 0),
+          Status: item.status || '',
+          FollowUpDate:
+            item.follow_up_date || '',
+          FollowUpNote:
+            item.follow_up_note || ''
+
+        }))
+
+      );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      sheet,
+      'Leads'
+    );
+
+  }
+
+
+  if (clientsData.length) {
+
+    const sheet =
+      XLSX.utils.json_to_sheet(
+
+        clientsData.map(item => ({
+
+          ID: item.id,
+          Name: item.name || '',
+          Company: item.company || '',
+          Phone: item.phone || '',
+          Email: item.email || '',
+          State: item.state || ''
+
+        }))
+
+      );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      sheet,
+      'Clients'
+    );
+
+  }
+
+
+  if (projectsData.length) {
+
+    const sheet =
+      XLSX.utils.json_to_sheet(
+
+        projectsData.map(item => ({
+
+          ID: item.id,
+          Project: item.title || '',
+          Client: item.client_name || '',
+          Service: item.service || '',
+          Budget: Number(item.budget || 0),
+          Status: item.status || '',
+          Deadline: item.deadline || ''
+
+        }))
+
+      );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      sheet,
+      'Projects'
+    );
+
+  }
+
+
+  if (invoicesData.length) {
+
+    const sheet =
+      XLSX.utils.json_to_sheet(
+
+        invoicesData.map(item => ({
+
+          ID: item.id,
+          Invoice:
+            item.invoice_number || '',
+          Client:
+            item.client_name || '',
+          Date:
+            item.date || '',
+          Amount:
+            Number(item.grand_total || 0),
+          Status:
+            item.status || ''
+
+        }))
+
+      );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      sheet,
+      'Invoices'
+    );
+
+  }
+
+
+  XLSX.writeFile(
+    workbook,
+    'SYNICON_CRM_ERP_Export.xlsx'
+  );
+
+
+  toast('Complete Excel export downloaded');
+
+}
+
+
+/* =========================================================
+   MODALS
+========================================================= */
+
+function openModal(id) {
+
+  const modal =
+    document.getElementById(id);
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+
+}
+
+
+function closeModal(id) {
+
+  const modal =
+    document.getElementById(id);
+
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+
+}
+
+
+window.addEventListener('click', function(event) {
+
+  const modalIds = [
+    'lead-modal',
+    'client-modal',
+    'project-modal',
+    'invoice-modal'
+  ];
+
+  modalIds.forEach(id => {
+
+    const modal =
+      document.getElementById(id);
+
+    if (
+      event.target === modal
+    ) {
+
+      closeModal(id);
+
+    }
+
+  });
+
+});
+
+
+/* =========================================================
+   RESPONSIVE SIDEBAR
+========================================================= */
+
+const responsiveStyle = document.createElement('style');
+
+responsiveStyle.innerHTML = `
+
+@media (max-width: 1023px) {
+
+  #sidebar {
+    width: 260px;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+  }
+
+  #sidebar.open {
+    transform: translateX(0);
+  }
+
+  main {
+    margin-left: 0 !important;
+  }
+
+}
+
+`;
+
+document.head.appendChild(responsiveStyle);
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+document.addEventListener('DOMContentLoaded', function() {
+
+  checkAuth();
+
+});
+
 </script>
+
 </body>
 </html>

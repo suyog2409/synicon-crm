@@ -1,160 +1,273 @@
-const express = require('express');
-const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
-const bodyParser = require('body-parser');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SYNICON IT SOLUTIONS — CRM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800">
+  <div class="flex min-h-screen">
+    <aside class="w-64 bg-slate-900 text-white p-5 flex flex-col justify-between">
+      <div>
+        <h1 class="text-xl font-bold text-blue-400">SYNICON</h1>
+        <p class="text-xs text-slate-400">IT Solutions CRM</p>
+        <nav class="mt-8 space-y-2">
+          <button onclick="showTab('dashboard')" class="nav-btn w-full text-left px-3 py-2 rounded bg-blue-700">Dashboard</button>
+          <button onclick="showTab('leads')" class="nav-btn w-full text-left px-3 py-2 rounded text-slate-300 hover:bg-slate-800">Leads / CRM</button>
+          <button onclick="showTab('clients')" class="nav-btn w-full text-left px-3 py-2 rounded text-slate-300 hover:bg-slate-800">Clients</button>
+          <button onclick="showTab('projects')" class="nav-btn w-full text-left px-3 py-2 rounded text-slate-300 hover:bg-slate-800">Projects</button>
+          <button onclick="showTab('invoices')" class="nav-btn w-full text-left px-3 py-2 rounded text-slate-300 hover:bg-slate-800">Invoices & GST</button>
+        </nav>
+      </div>
+      <div class="text-xs text-slate-500">SYNICON CRM v1.0</div>
+    </aside>
 
-const app = express();
-app.use(cors());
-app.use(bodyParser.json());
+    <main class="flex-1 p-6 md:p-8 overflow-y-auto">
+      <div id="message" class="hidden mb-4 p-3 rounded-lg text-sm"></div>
 
-// Initialize SQLite database file
-const db = new sqlite3.Database('./database.sqlite', (err) => {
-  if (err) console.error('DB Error:', err.message);
-  else console.log('Connected to SQLite database.');
-});
+      <section id="tab-dashboard" class="space-y-6">
+        <h2 class="text-2xl font-bold">Agency Overview</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-xl border shadow-sm"><span class="text-xs font-semibold text-slate-500">TOTAL LEADS</span><p id="stat-leads" class="text-2xl font-black mt-2">0</p></div>
+          <div class="bg-white p-5 rounded-xl border shadow-sm"><span class="text-xs font-semibold text-slate-500">CLIENTS</span><p id="stat-clients" class="text-2xl font-black mt-2">0</p></div>
+          <div class="bg-white p-5 rounded-xl border shadow-sm"><span class="text-xs font-semibold text-slate-500">ACTIVE PROJECTS</span><p id="stat-projects" class="text-2xl font-black mt-2">0</p></div>
+          <div class="bg-white p-5 rounded-xl border shadow-sm"><span class="text-xs font-semibold text-slate-500">TOTAL REVENUE</span><p id="stat-revenue" class="text-2xl font-black text-emerald-600 mt-2">₹0</p></div>
+        </div>
+      </section>
 
-// Create Essential Tables
-db.serialize(() => {
-  // 1. Leads / CRM
-  db.run(`CREATE TABLE IF NOT EXISTS leads (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    company TEXT,
-    phone TEXT NOT NULL,
-    email TEXT,
-    service TEXT,
-    expected_value REAL DEFAULT 0,
-    status TEXT DEFAULT 'NEW'
-  )`);
+      <section id="tab-leads" class="hidden space-y-5">
+        <div class="flex justify-between items-center">
+          <h2 class="text-2xl font-bold">Leads Pipeline</h2>
+          <button onclick="openModal('lead-modal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg">+ Add Lead</button>
+        </div>
+        <div class="bg-white border rounded-xl overflow-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-slate-50"><tr><th class="p-4 text-left">Prospect</th><th class="p-4 text-left">Phone</th><th class="p-4 text-left">Service</th><th class="p-4 text-left">Value</th><th class="p-4 text-left">Status</th><th class="p-4 text-right">Action</th></tr></thead>
+            <tbody id="leads-table-body"></tbody>
+          </table>
+        </div>
+      </section>
 
-  // 2. Clients
-  db.run(`CREATE TABLE IF NOT EXISTS clients (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    company TEXT,
-    phone TEXT NOT NULL,
-    email TEXT,
-    gstin TEXT,
-    state TEXT DEFAULT 'Maharashtra',
-    state_code TEXT DEFAULT '27'
-  )`);
+      <section id="tab-clients" class="hidden space-y-5">
+        <div class="flex justify-between items-center">
+          <h2 class="text-2xl font-bold">Clients</h2>
+          <button onclick="openModal('client-modal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg">+ Add Client</button>
+        </div>
+        <div class="bg-white border rounded-xl overflow-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-slate-50"><tr><th class="p-4 text-left">Name</th><th class="p-4 text-left">Company</th><th class="p-4 text-left">Phone</th><th class="p-4 text-left">Email</th><th class="p-4 text-left">GSTIN</th></tr></thead>
+            <tbody id="clients-table-body"></tbody>
+          </table>
+        </div>
+      </section>
 
-  // 3. Projects
-  db.run(`CREATE TABLE IF NOT EXISTS projects (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    client_name TEXT NOT NULL,
-    service TEXT,
-    budget REAL DEFAULT 0,
-    status TEXT DEFAULT 'IN_PROGRESS',
-    deadline TEXT
-  )`);
+      <section id="tab-projects" class="hidden space-y-5">
+        <div class="flex justify-between items-center">
+          <h2 class="text-2xl font-bold">Projects</h2>
+          <button onclick="openModal('project-modal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg">+ New Project</button>
+        </div>
+        <div class="bg-white border rounded-xl overflow-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-slate-50"><tr><th class="p-4 text-left">Project</th><th class="p-4 text-left">Client</th><th class="p-4 text-left">Service</th><th class="p-4 text-left">Budget</th><th class="p-4 text-left">Deadline</th></tr></thead>
+            <tbody id="projects-table-body"></tbody>
+          </table>
+        </div>
+      </section>
 
-  // 4. Invoices (GST Billing)
-  db.run(`CREATE TABLE IF NOT EXISTS invoices (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    invoice_number TEXT UNIQUE,
-    client_name TEXT NOT NULL,
-    taxable_amount REAL NOT NULL,
-    gst_rate REAL DEFAULT 18,
-    total_tax REAL NOT NULL,
-    grand_total REAL NOT NULL,
-    status TEXT DEFAULT 'PENDING',
-    date TEXT
-  )`);
-});
+      <section id="tab-invoices" class="hidden space-y-5">
+        <div class="flex justify-between items-center">
+          <h2 class="text-2xl font-bold">GST Invoices</h2>
+          <button onclick="openModal('invoice-modal')" class="bg-blue-600 text-white px-4 py-2 rounded-lg">+ Create Invoice</button>
+        </div>
+        <div class="bg-white border rounded-xl overflow-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-slate-50"><tr><th class="p-4 text-left">Invoice</th><th class="p-4 text-left">Client</th><th class="p-4 text-left">Taxable</th><th class="p-4 text-left">GST</th><th class="p-4 text-left">Total</th><th class="p-4 text-left">Date</th></tr></thead>
+            <tbody id="invoices-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
 
-// --- API Endpoints ---
+  <div id="lead-modal" class="hidden fixed inset-0 bg-black/50 items-center justify-center p-4">
+    <div class="bg-white p-6 rounded-xl w-full max-w-md">
+      <h3 class="text-lg font-bold mb-4">Add Lead</h3>
+      <form onsubmit="submitLead(event)" class="space-y-3">
+        <input id="lead-name" required placeholder="Full Name" class="w-full border p-2 rounded">
+        <input id="lead-company" placeholder="Company" class="w-full border p-2 rounded">
+        <input id="lead-phone" required placeholder="Phone" class="w-full border p-2 rounded">
+        <input id="lead-email" type="email" placeholder="Email" class="w-full border p-2 rounded">
+        <input id="lead-service" required placeholder="Service" class="w-full border p-2 rounded">
+        <input id="lead-value" type="number" placeholder="Expected Value ₹" class="w-full border p-2 rounded">
+        <div class="flex justify-end gap-2"><button type="button" onclick="closeModal('lead-modal')" class="px-4 py-2">Cancel</button><button class="bg-blue-600 text-white px-4 py-2 rounded">Save</button></div>
+      </form>
+    </div>
+  </div>
 
-// LEADS
-app.get('/api/leads', (req, res) => {
-  db.all('SELECT * FROM leads ORDER BY id DESC', [], (err, rows) => res.json(rows));
-});
+  <div id="client-modal" class="hidden fixed inset-0 bg-black/50 items-center justify-center p-4">
+    <div class="bg-white p-6 rounded-xl w-full max-w-md">
+      <h3 class="text-lg font-bold mb-4">Add Client</h3>
+      <form onsubmit="submitClient(event)" class="space-y-3">
+        <input id="client-name" required placeholder="Name" class="w-full border p-2 rounded">
+        <input id="client-company" placeholder="Company" class="w-full border p-2 rounded">
+        <input id="client-phone" required placeholder="Phone" class="w-full border p-2 rounded">
+        <input id="client-email" type="email" placeholder="Email" class="w-full border p-2 rounded">
+        <input id="client-gstin" placeholder="GSTIN" class="w-full border p-2 rounded">
+        <div class="flex justify-end gap-2"><button type="button" onclick="closeModal('client-modal')" class="px-4 py-2">Cancel</button><button class="bg-blue-600 text-white px-4 py-2 rounded">Save</button></div>
+      </form>
+    </div>
+  </div>
 
-app.post('/api/leads', (req, res) => {
-  const { name, company, phone, email, service, expected_value } = req.body;
-  db.run(
-    `INSERT INTO leads (name, company, phone, email, service, expected_value) VALUES (?, ?, ?, ?, ?, ?)`,
-    [name, company, phone, email, service, expected_value || 0],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: this.lastID, success: true });
-    }
-  );
-});
+  <div id="project-modal" class="hidden fixed inset-0 bg-black/50 items-center justify-center p-4">
+    <div class="bg-white p-6 rounded-xl w-full max-w-md">
+      <h3 class="text-lg font-bold mb-4">New Project</h3>
+      <form onsubmit="submitProject(event)" class="space-y-3">
+        <input id="proj-title" required placeholder="Project Name" class="w-full border p-2 rounded">
+        <input id="proj-client" required placeholder="Client Name" class="w-full border p-2 rounded">
+        <input id="proj-service" placeholder="Service" class="w-full border p-2 rounded">
+        <input id="proj-budget" type="number" placeholder="Budget ₹" class="w-full border p-2 rounded">
+        <input id="proj-deadline" type="date" required class="w-full border p-2 rounded">
+        <div class="flex justify-end gap-2"><button type="button" onclick="closeModal('project-modal')" class="px-4 py-2">Cancel</button><button class="bg-blue-600 text-white px-4 py-2 rounded">Save</button></div>
+      </form>
+    </div>
+  </div>
 
-// Convert Lead -> Client
-app.post('/api/leads/:id/convert', (req, res) => {
-  db.get('SELECT * FROM leads WHERE id = ?', [req.params.id], (err, lead) => {
-    if (!lead) return res.status(404).json({ error: 'Lead not found' });
-    db.run(
-      `INSERT INTO clients (name, company, phone, email) VALUES (?, ?, ?, ?)`,
-      [lead.name, lead.company, lead.phone, lead.email],
-      function (insertErr) {
-        if (insertErr) return res.status(500).json({ error: insertErr.message });
-        db.run(`UPDATE leads SET status = 'WON' WHERE id = ?`, [req.params.id]);
-        res.json({ success: true, clientId: this.lastID });
-      }
-    );
+  <div id="invoice-modal" class="hidden fixed inset-0 bg-black/50 items-center justify-center p-4">
+    <div class="bg-white p-6 rounded-xl w-full max-w-md">
+      <h3 class="text-lg font-bold mb-4">Create Invoice</h3>
+      <form onsubmit="submitInvoice(event)" class="space-y-3">
+        <input id="inv-client" required placeholder="Client Name" class="w-full border p-2 rounded">
+        <input id="inv-amount" required type="number" min="1" placeholder="Taxable Amount ₹" class="w-full border p-2 rounded">
+        <p class="text-xs text-slate-500">GST is calculated at 18%.</p>
+        <div class="flex justify-end gap-2"><button type="button" onclick="closeModal('invoice-modal')" class="px-4 py-2">Cancel</button><button class="bg-blue-600 text-white px-4 py-2 rounded">Generate</button></div>
+      </form>
+    </div>
+  </div>
+
+<script>
+const API = '/api';
+
+const money = n => '₹' + Number(n || 0).toLocaleString('en-IN');
+
+function showTab(name) {
+  ['dashboard','leads','clients','projects','invoices'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('hidden', t !== name);
   });
-});
+  loadData();
+}
+function openModal(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('hidden');
+  el.classList.add('flex');
+}
+function closeModal(id) {
+  const el = document.getElementById(id);
+  el.classList.add('hidden');
+  el.classList.remove('flex');
+}
+function showMessage(text, ok=true) {
+  const el = document.getElementById('message');
+  el.textContent = text;
+  el.className = 'mb-4 p-3 rounded-lg text-sm ' + (ok ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800');
+  setTimeout(() => el.classList.add('hidden'), 3000);
+}
 
-// CLIENTS
-app.get('/api/clients', (req, res) => {
-  db.all('SELECT * FROM clients ORDER BY id DESC', [], (err, rows) => res.json(rows));
-});
+async function getJson(url, options) {
+  const r = await fetch(url, options);
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
 
-// PROJECTS
-app.get('/api/projects', (req, res) => {
-  db.all('SELECT * FROM projects ORDER BY id DESC', [], (err, rows) => res.json(rows));
-});
+async function loadData() {
+  try {
+    const stats = await getJson(API + '/stats');
+    document.getElementById('stat-leads').textContent = stats.total_leads || 0;
+    document.getElementById('stat-clients').textContent = stats.total_clients || 0;
+    document.getElementById('stat-projects').textContent = stats.active_projects || 0;
+    document.getElementById('stat-revenue').textContent = money(stats.total_revenue);
 
-app.post('/api/projects', (req, res) => {
-  const { title, client_name, service, budget, deadline } = req.body;
-  db.run(
-    `INSERT INTO projects (title, client_name, service, budget, deadline) VALUES (?, ?, ?, ?, ?)`,
-    [title, client_name, service, budget || 0, deadline],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: this.lastID, success: true });
-    }
-  );
-});
+    const leads = await getJson(API + '/leads');
+    document.getElementById('leads-table-body').innerHTML = leads.map(l => `
+      <tr class="border-t">
+        <td class="p-4 font-semibold">${esc(l.name)}<br><span class="text-xs text-slate-400">${esc(l.company || '')}</span></td>
+        <td class="p-4">${esc(l.phone)}</td><td class="p-4">${esc(l.service || '')}</td>
+        <td class="p-4">${money(l.expected_value)}</td>
+        <td class="p-4">${esc(l.status)}</td>
+        <td class="p-4 text-right">${l.status !== 'WON' ? `<button onclick="convertLead(${l.id})" class="bg-emerald-600 text-white px-3 py-1 rounded text-xs">Convert</button>` : 'Client Active'}</td>
+      </tr>`).join('') || emptyRow(6);
 
-// INVOICES & GST
-app.get('/api/invoices', (req, res) => {
-  db.all('SELECT * FROM invoices ORDER BY id DESC', [], (err, rows) => res.json(rows));
-});
+    const clients = await getJson(API + '/clients');
+    document.getElementById('clients-table-body').innerHTML = clients.map(c => `
+      <tr class="border-t"><td class="p-4 font-semibold">${esc(c.name)}</td><td class="p-4">${esc(c.company || '')}</td><td class="p-4">${esc(c.phone)}</td><td class="p-4">${esc(c.email || '')}</td><td class="p-4">${esc(c.gstin || '')}</td></tr>
+    `).join('') || emptyRow(5);
 
-app.post('/api/invoices', (req, res) => {
-  const { client_name, taxable_amount, is_interstate } = req.body;
-  const taxable = parseFloat(taxable_amount) || 0;
-  const totalTax = (taxable * 18) / 100;
-  const grandTotal = taxable + totalTax;
-  const invNum = 'INV-' + Date.now().toString().slice(-6);
-  const today = new Date().toISOString().split('T')[0];
+    const projects = await getJson(API + '/projects');
+    document.getElementById('projects-table-body').innerHTML = projects.map(p => `
+      <tr class="border-t"><td class="p-4 font-semibold">${esc(p.title)}</td><td class="p-4">${esc(p.client_name)}</td><td class="p-4">${esc(p.service || '')}</td><td class="p-4">${money(p.budget)}</td><td class="p-4">${esc(p.deadline || '')}</td></tr>
+    `).join('') || emptyRow(5);
 
-  db.run(
-    `INSERT INTO invoices (invoice_number, client_name, taxable_amount, total_tax, grand_total, date) 
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [invNum, client_name, taxable, totalTax, grandTotal, today],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: this.lastID, invoice_number: invNum, grand_total: grandTotal });
-    }
-  );
-});
+    const invoices = await getJson(API + '/invoices');
+    document.getElementById('invoices-table-body').innerHTML = invoices.map(i => `
+      <tr class="border-t"><td class="p-4 font-semibold text-blue-600">${esc(i.invoice_number)}</td><td class="p-4">${esc(i.client_name)}</td><td class="p-4">${money(i.taxable_amount)}</td><td class="p-4">${money(i.total_tax)}</td><td class="p-4 font-bold">${money(i.grand_total)}</td><td class="p-4">${esc(i.date || '')}</td></tr>
+    `).join('') || emptyRow(6);
+  } catch (e) {
+    showMessage('Backend connection error: ' + e.message, false);
+  }
+}
 
-// DASHBOARD STATS
-app.get('/api/stats', (req, res) => {
-  db.get(`SELECT 
-    (SELECT COUNT(*) FROM leads) as total_leads,
-    (SELECT COUNT(*) FROM clients) as total_clients,
-    (SELECT COUNT(*) FROM projects WHERE status = 'IN_PROGRESS') as active_projects,
-    (SELECT COALESCE(SUM(grand_total), 0) FROM invoices) as total_revenue`, [], (err, stats) => {
-      res.json(stats);
-  });
-});
+function emptyRow(cols) { return `<tr><td colspan="${cols}" class="p-8 text-center text-slate-400">No records yet.</td></tr>`; }
+function esc(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
 
-const PORT = 5000;
-app.listen(PORT, () => console.log(`SYNICON ERP Server running on http://localhost:${PORT}`));
+async function submitLead(e) {
+  e.preventDefault();
+  try {
+    await getJson(API + '/leads', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+      name: document.getElementById('lead-name').value, company: document.getElementById('lead-company').value,
+      phone: document.getElementById('lead-phone').value, email: document.getElementById('lead-email').value,
+      service: document.getElementById('lead-service').value, expected_value: document.getElementById('lead-value').value
+    })});
+    e.target.reset(); closeModal('lead-modal'); showMessage('Lead saved successfully.'); loadData();
+  } catch(e) { showMessage(e.message, false); }
+}
+async function submitClient(e) {
+  e.preventDefault();
+  try {
+    await getJson(API + '/clients', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+      name:document.getElementById('client-name').value, company:document.getElementById('client-company').value,
+      phone:document.getElementById('client-phone').value, email:document.getElementById('client-email').value,
+      gstin:document.getElementById('client-gstin').value
+    })});
+    e.target.reset(); closeModal('client-modal'); showMessage('Client saved successfully.'); loadData();
+  } catch(e) { showMessage(e.message, false); }
+}
+async function convertLead(id) {
+  try { await getJson(API + '/leads/' + id + '/convert', {method:'POST'}); showMessage('Lead converted to client.'); loadData(); }
+  catch(e) { showMessage(e.message, false); }
+}
+async function submitProject(e) {
+  e.preventDefault();
+  try {
+    await getJson(API + '/projects', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+      title:document.getElementById('proj-title').value, client_name:document.getElementById('proj-client').value,
+      service:document.getElementById('proj-service').value, budget:document.getElementById('proj-budget').value,
+      deadline:document.getElementById('proj-deadline').value
+    })});
+    e.target.reset(); closeModal('project-modal'); showMessage('Project saved successfully.'); loadData();
+  } catch(e) { showMessage(e.message, false); }
+}
+async function submitInvoice(e) {
+  e.preventDefault();
+  try {
+    await getJson(API + '/invoices', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({
+      client_name:document.getElementById('inv-client').value, taxable_amount:document.getElementById('inv-amount').value
+    })});
+    e.target.reset(); closeModal('invoice-modal'); showMessage('Invoice created successfully.'); loadData();
+  } catch(e) { showMessage(e.message, false); }
+}
+
+loadData();
+</script>
+</body>
+</html>

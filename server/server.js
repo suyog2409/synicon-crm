@@ -6,8 +6,6 @@ const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Supabase Transaction Pooler connection string.
-// Set DATABASE_URL in Render. Never commit the database password to GitHub.
 if (!process.env.DATABASE_URL) {
   console.error('ERROR: DATABASE_URL environment variable is missing.');
   process.exit(1);
@@ -24,7 +22,6 @@ const pool = new Pool({
 app.use(cors());
 app.use(express.json());
 
-// Serve the CRM frontend when deployed as one Render Web Service.
 app.use(express.static(path.join(__dirname, '..', 'client')));
 
 async function initDatabase() {
@@ -77,19 +74,36 @@ async function initDatabase() {
   console.log('Supabase PostgreSQL tables are ready.');
 }
 
-// Health check
+
+// =========================
+// HEALTH CHECK
+// =========================
+
 app.get('/api/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
-    res.json({ success: true, database: 'connected' });
+
+    res.json({
+      success: true,
+      database: 'connected'
+    });
+
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
   }
 });
 
+
+// =========================
 // DASHBOARD STATS
+// =========================
+
 app.get('/api/stats', async (req, res) => {
   try {
+
     const { rows } = await pool.query(`
       SELECT
         (SELECT COUNT(*) FROM leads) AS total_leads,
@@ -97,48 +111,210 @@ app.get('/api/stats', async (req, res) => {
         (SELECT COUNT(*) FROM projects WHERE status = 'IN_PROGRESS') AS active_projects,
         (SELECT COALESCE(SUM(grand_total), 0) FROM invoices) AS total_revenue
     `);
+
     res.json(rows[0]);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+
+    res.status(500).json({
+      error: err.message
+    });
+
   }
 });
 
+
+// =====================================================
 // LEADS
+// =====================================================
+
+// GET LEADS
 app.get('/api/leads', async (req, res) => {
+
   try {
-    const { rows } = await pool.query('SELECT * FROM leads ORDER BY id DESC');
+
+    const { rows } = await pool.query(
+      'SELECT * FROM leads ORDER BY id DESC'
+    );
+
     res.json(rows);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+
+    res.status(500).json({
+      error: err.message
+    });
+
   }
+
 });
 
+
+// ADD LEAD
 app.post('/api/leads', async (req, res) => {
+
   try {
-    const { name, company, phone, email, service, expected_value } = req.body;
+
+    const {
+      name,
+      company,
+      phone,
+      email,
+      service,
+      expected_value
+    } = req.body;
 
     if (!name || !phone || !service) {
-      return res.status(400).json({ error: 'Name, phone and service are required.' });
+
+      return res.status(400).json({
+        error: 'Name, phone and service are required.'
+      });
+
     }
 
     const { rows } = await pool.query(
-      `INSERT INTO leads (name, company, phone, email, service, expected_value)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-      [name, company || null, phone, email || null, service, Number(expected_value) || 0]
+
+      `INSERT INTO leads
+      (name, company, phone, email, service, expected_value)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *`,
+
+      [
+        name,
+        company || null,
+        phone,
+        email || null,
+        service,
+        Number(expected_value) || 0
+      ]
+
     );
 
     res.status(201).json(rows[0]);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+
+    res.status(500).json({
+      error: err.message
+    });
+
   }
+
 });
 
-// Convert Lead -> Client
+
+// EDIT LEAD
+app.put('/api/leads/:id', async (req, res) => {
+
+  try {
+
+    const {
+      name,
+      company,
+      phone,
+      email,
+      service,
+      expected_value,
+      status
+    } = req.body;
+
+    if (!name || !phone || !service) {
+
+      return res.status(400).json({
+        error: 'Name, phone and service are required.'
+      });
+
+    }
+
+    const { rows } = await pool.query(
+
+      `UPDATE leads
+       SET
+         name = $1,
+         company = $2,
+         phone = $3,
+         email = $4,
+         service = $5,
+         expected_value = $6,
+         status = $7
+       WHERE id = $8
+       RETURNING *`,
+
+      [
+        name,
+        company || null,
+        phone,
+        email || null,
+        service,
+        Number(expected_value) || 0,
+        status || 'NEW',
+        req.params.id
+      ]
+
+    );
+
+    if (!rows.length) {
+
+      return res.status(404).json({
+        error: 'Lead not found'
+      });
+
+    }
+
+    res.json(rows[0]);
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: err.message
+    });
+
+  }
+
+});
+
+
+// DELETE LEAD
+app.delete('/api/leads/:id', async (req, res) => {
+
+  try {
+
+    const result = await pool.query(
+      'DELETE FROM leads WHERE id = $1',
+      [req.params.id]
+    );
+
+    if (!result.rowCount) {
+
+      return res.status(404).json({
+        error: 'Lead not found'
+      });
+
+    }
+
+    res.json({
+      success: true,
+      message: 'Lead deleted successfully'
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: err.message
+    });
+
+  }
+
+});
+
+
+// CONVERT LEAD -> CLIENT
 app.post('/api/leads/:id/convert', async (req, res) => {
+
   const client = await pool.connect();
 
   try {
+
     await client.query('BEGIN');
 
     const leadResult = await client.query(
@@ -147,57 +323,120 @@ app.post('/api/leads/:id/convert', async (req, res) => {
     );
 
     if (!leadResult.rows.length) {
+
       await client.query('ROLLBACK');
-      return res.status(404).json({ error: 'Lead not found' });
+
+      return res.status(404).json({
+        error: 'Lead not found'
+      });
+
     }
 
     const lead = leadResult.rows[0];
 
     const clientResult = await client.query(
-      `INSERT INTO clients (name, company, phone, email)
+
+      `INSERT INTO clients
+       (name, company, phone, email)
        VALUES ($1, $2, $3, $4)
        RETURNING id`,
-      [lead.name, lead.company, lead.phone, lead.email]
+
+      [
+        lead.name,
+        lead.company,
+        lead.phone,
+        lead.email
+      ]
+
     );
 
     await client.query(
-      `UPDATE leads SET status = 'WON' WHERE id = $1`,
+      `UPDATE leads
+       SET status = 'WON'
+       WHERE id = $1`,
       [req.params.id]
     );
 
     await client.query('COMMIT');
 
-    res.json({ success: true, clientId: clientResult.rows[0].id });
+    res.json({
+      success: true,
+      clientId: clientResult.rows[0].id
+    });
+
   } catch (err) {
+
     await client.query('ROLLBACK');
-    res.status(500).json({ error: err.message });
+
+    res.status(500).json({
+      error: err.message
+    });
+
   } finally {
+
     client.release();
+
   }
+
 });
 
+
+// =====================================================
 // CLIENTS
+// =====================================================
+
+// GET CLIENTS
 app.get('/api/clients', async (req, res) => {
+
   try {
-    const { rows } = await pool.query('SELECT * FROM clients ORDER BY id DESC');
+
+    const { rows } = await pool.query(
+      'SELECT * FROM clients ORDER BY id DESC'
+    );
+
     res.json(rows);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+
+    res.status(500).json({
+      error: err.message
+    });
+
   }
+
 });
 
+
+// ADD CLIENT
 app.post('/api/clients', async (req, res) => {
+
   try {
-    const { name, company, phone, email, gstin, state, state_code } = req.body;
+
+    const {
+      name,
+      company,
+      phone,
+      email,
+      gstin,
+      state,
+      state_code
+    } = req.body;
 
     if (!name || !phone) {
-      return res.status(400).json({ error: 'Name and phone are required.' });
+
+      return res.status(400).json({
+        error: 'Name and phone are required.'
+      });
+
     }
 
     const { rows } = await pool.query(
-      `INSERT INTO clients (name, company, phone, email, gstin, state, state_code)
+
+      `INSERT INTO clients
+       (name, company, phone, email, gstin, state, state_code)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
+
       [
         name,
         company || null,
@@ -207,104 +446,579 @@ app.post('/api/clients', async (req, res) => {
         state || 'Maharashtra',
         state_code || '27'
       ]
+
     );
 
     res.status(201).json(rows[0]);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+
+    res.status(500).json({
+      error: err.message
+    });
+
   }
+
 });
 
-// PROJECTS
-app.get('/api/projects', async (req, res) => {
-  try {
-    const { rows } = await pool.query('SELECT * FROM projects ORDER BY id DESC');
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
-app.post('/api/projects', async (req, res) => {
-  try {
-    const { title, client_name, service, budget, deadline } = req.body;
+// EDIT CLIENT
+app.put('/api/clients/:id', async (req, res) => {
 
-    if (!title || !client_name || !deadline) {
-      return res.status(400).json({ error: 'Project, client and deadline are required.' });
+  try {
+
+    const {
+      name,
+      company,
+      phone,
+      email,
+      gstin,
+      state,
+      state_code
+    } = req.body;
+
+    if (!name || !phone) {
+
+      return res.status(400).json({
+        error: 'Name and phone are required.'
+      });
+
     }
 
     const { rows } = await pool.query(
-      `INSERT INTO projects (title, client_name, service, budget, deadline)
+
+      `UPDATE clients
+       SET
+         name = $1,
+         company = $2,
+         phone = $3,
+         email = $4,
+         gstin = $5,
+         state = $6,
+         state_code = $7
+       WHERE id = $8
+       RETURNING *`,
+
+      [
+        name,
+        company || null,
+        phone,
+        email || null,
+        gstin || null,
+        state || 'Maharashtra',
+        state_code || '27',
+        req.params.id
+      ]
+
+    );
+
+    if (!rows.length) {
+
+      return res.status(404).json({
+        error: 'Client not found'
+      });
+
+    }
+
+    res.json(rows[0]);
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: err.message
+    });
+
+  }
+
+});
+
+
+// DELETE CLIENT
+app.delete('/api/clients/:id', async (req, res) => {
+
+  try {
+
+    const result = await pool.query(
+      'DELETE FROM clients WHERE id = $1',
+      [req.params.id]
+    );
+
+    if (!result.rowCount) {
+
+      return res.status(404).json({
+        error: 'Client not found'
+      });
+
+    }
+
+    res.json({
+      success: true,
+      message: 'Client deleted successfully'
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: err.message
+    });
+
+  }
+
+});
+
+
+// =====================================================
+// PROJECTS
+// =====================================================
+
+// GET PROJECTS
+app.get('/api/projects', async (req, res) => {
+
+  try {
+
+    const { rows } = await pool.query(
+      'SELECT * FROM projects ORDER BY id DESC'
+    );
+
+    res.json(rows);
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: err.message
+    });
+
+  }
+
+});
+
+
+// ADD PROJECT
+app.post('/api/projects', async (req, res) => {
+
+  try {
+
+    const {
+      title,
+      client_name,
+      service,
+      budget,
+      deadline
+    } = req.body;
+
+    if (!title || !client_name || !deadline) {
+
+      return res.status(400).json({
+        error: 'Project, client and deadline are required.'
+      });
+
+    }
+
+    const { rows } = await pool.query(
+
+      `INSERT INTO projects
+       (title, client_name, service, budget, deadline)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [title, client_name, service || null, Number(budget) || 0, deadline]
+
+      [
+        title,
+        client_name,
+        service || null,
+        Number(budget) || 0,
+        deadline
+      ]
+
     );
 
     res.status(201).json(rows[0]);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+
+    res.status(500).json({
+      error: err.message
+    });
+
   }
+
 });
 
-// INVOICES & GST
+
+// EDIT PROJECT
+app.put('/api/projects/:id', async (req, res) => {
+
+  try {
+
+    const {
+      title,
+      client_name,
+      service,
+      budget,
+      status,
+      deadline
+    } = req.body;
+
+    if (!title || !client_name || !deadline) {
+
+      return res.status(400).json({
+        error: 'Project, client and deadline are required.'
+      });
+
+    }
+
+    const { rows } = await pool.query(
+
+      `UPDATE projects
+       SET
+         title = $1,
+         client_name = $2,
+         service = $3,
+         budget = $4,
+         status = $5,
+         deadline = $6
+       WHERE id = $7
+       RETURNING *`,
+
+      [
+        title,
+        client_name,
+        service || null,
+        Number(budget) || 0,
+        status || 'IN_PROGRESS',
+        deadline,
+        req.params.id
+      ]
+
+    );
+
+    if (!rows.length) {
+
+      return res.status(404).json({
+        error: 'Project not found'
+      });
+
+    }
+
+    res.json(rows[0]);
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: err.message
+    });
+
+  }
+
+});
+
+
+// DELETE PROJECT
+app.delete('/api/projects/:id', async (req, res) => {
+
+  try {
+
+    const result = await pool.query(
+      'DELETE FROM projects WHERE id = $1',
+      [req.params.id]
+    );
+
+    if (!result.rowCount) {
+
+      return res.status(404).json({
+        error: 'Project not found'
+      });
+
+    }
+
+    res.json({
+      success: true,
+      message: 'Project deleted successfully'
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: err.message
+    });
+
+  }
+
+});
+
+
+// =====================================================
+// INVOICES
+// =====================================================
+
+// GET INVOICES
 app.get('/api/invoices', async (req, res) => {
+
   try {
-    const { rows } = await pool.query('SELECT * FROM invoices ORDER BY id DESC');
+
+    const { rows } = await pool.query(
+      'SELECT * FROM invoices ORDER BY id DESC'
+    );
+
     res.json(rows);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+
+    res.status(500).json({
+      error: err.message
+    });
+
   }
+
 });
 
+
+// ADD INVOICE
 app.post('/api/invoices', async (req, res) => {
+
   try {
-    const { client_name, taxable_amount, is_interstate } = req.body;
+
+    const {
+      client_name,
+      taxable_amount
+    } = req.body;
+
     const taxable = Number(taxable_amount) || 0;
 
     if (!client_name || taxable <= 0) {
-      return res.status(400).json({ error: 'Client name and taxable amount are required.' });
+
+      return res.status(400).json({
+        error: 'Client name and taxable amount are required.'
+      });
+
     }
 
     const gstRate = 18;
-    const totalTax = (taxable * gstRate) / 100;
-    const grandTotal = taxable + totalTax;
 
-    const prefix = 'INV-';
-    const invoiceNumber = prefix + Date.now().toString().slice(-8);
-    const today = new Date().toISOString().split('T')[0];
+    const totalTax =
+      (taxable * gstRate) / 100;
+
+    const grandTotal =
+      taxable + totalTax;
+
+    const invoiceNumber =
+      'INV-' +
+      Date.now().toString().slice(-8);
+
+    const today =
+      new Date().toISOString().split('T')[0];
 
     const { rows } = await pool.query(
+
       `INSERT INTO invoices
-       (invoice_number, client_name, taxable_amount, gst_rate, total_tax, grand_total, date)
+       (
+         invoice_number,
+         client_name,
+         taxable_amount,
+         gst_rate,
+         total_tax,
+         grand_total,
+         date
+       )
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [invoiceNumber, client_name, taxable, gstRate, totalTax, grandTotal, today]
+
+      [
+        invoiceNumber,
+        client_name,
+        taxable,
+        gstRate,
+        totalTax,
+        grandTotal,
+        today
+      ]
+
     );
 
     res.status(201).json(rows[0]);
+
   } catch (err) {
+
     if (err.code === '23505') {
-      return res.status(409).json({ error: 'Invoice number already exists. Please try again.' });
+
+      return res.status(409).json({
+        error: 'Invoice number already exists. Please try again.'
+      });
+
     }
-    res.status(500).json({ error: err.message });
+
+    res.status(500).json({
+      error: err.message
+    });
+
   }
+
 });
 
-// Frontend fallback
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ error: 'API route not found' });
+
+// EDIT INVOICE
+app.put('/api/invoices/:id', async (req, res) => {
+
+  try {
+
+    const {
+      client_name,
+      taxable_amount,
+      status,
+      date
+    } = req.body;
+
+    const taxable =
+      Number(taxable_amount) || 0;
+
+    if (!client_name || taxable <= 0) {
+
+      return res.status(400).json({
+        error: 'Client name and taxable amount are required.'
+      });
+
+    }
+
+    const gstRate = 18;
+
+    const totalTax =
+      (taxable * gstRate) / 100;
+
+    const grandTotal =
+      taxable + totalTax;
+
+    const { rows } = await pool.query(
+
+      `UPDATE invoices
+       SET
+         client_name = $1,
+         taxable_amount = $2,
+         gst_rate = $3,
+         total_tax = $4,
+         grand_total = $5,
+         status = $6,
+         date = $7
+       WHERE id = $8
+       RETURNING *`,
+
+      [
+        client_name,
+        taxable,
+        gstRate,
+        totalTax,
+        grandTotal,
+        status || 'PENDING',
+        date || null,
+        req.params.id
+      ]
+
+    );
+
+    if (!rows.length) {
+
+      return res.status(404).json({
+        error: 'Invoice not found'
+      });
+
+    }
+
+    res.json(rows[0]);
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: err.message
+    });
+
   }
-  res.sendFile(path.join(__dirname, '..', 'client', 'index.html'));
+
 });
+
+
+// DELETE INVOICE
+app.delete('/api/invoices/:id', async (req, res) => {
+
+  try {
+
+    const result = await pool.query(
+      'DELETE FROM invoices WHERE id = $1',
+      [req.params.id]
+    );
+
+    if (!result.rowCount) {
+
+      return res.status(404).json({
+        error: 'Invoice not found'
+      });
+
+    }
+
+    res.json({
+      success: true,
+      message: 'Invoice deleted successfully'
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+      error: err.message
+    });
+
+  }
+
+});
+
+
+// =====================================================
+// FRONTEND FALLBACK
+// =====================================================
+
+app.get('*', (req, res) => {
+
+  if (req.path.startsWith('/api/')) {
+
+    return res.status(404).json({
+      error: 'API route not found'
+    });
+
+  }
+
+  res.sendFile(
+    path.join(
+      __dirname,
+      '..',
+      'client',
+      'index.html'
+    )
+  );
+
+});
+
+
+// =====================================================
+// START SERVER
+// =====================================================
 
 initDatabase()
+
   .then(() => {
+
     app.listen(PORT, () => {
-      console.log(`SYNICON CRM running on port ${PORT}`);
+
+      console.log(
+        `SYNICON CRM running on port ${PORT}`
+      );
+
     });
+
   })
+
   .catch((err) => {
-    console.error('Database initialization failed:', err);
+
+    console.error(
+      'Database initialization failed:',
+      err
+    );
+
     process.exit(1);
+
   });

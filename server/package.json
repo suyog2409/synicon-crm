@@ -1,0 +1,18 @@
+{
+  "name": "synicon-mini-erp",
+  "version": "2.0.0",
+  "private": true,
+  "description": "SYNICON IT SOLUTIONS CRM - Express + Supabase PostgreSQL",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "pg": "^8.16.3"
+  }
+}

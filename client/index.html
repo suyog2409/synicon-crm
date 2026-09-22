@@ -1,0 +1,160 @@
+const express = require('express');
+const cors = require('cors');
+const sqlite3 = require('sqlite3').verbose();
+const bodyParser = require('body-parser');
+
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+
+// Initialize SQLite database file
+const db = new sqlite3.Database('./database.sqlite', (err) => {
+  if (err) console.error('DB Error:', err.message);
+  else console.log('Connected to SQLite database.');
+});
+
+// Create Essential Tables
+db.serialize(() => {
+  // 1. Leads / CRM
+  db.run(`CREATE TABLE IF NOT EXISTS leads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    company TEXT,
+    phone TEXT NOT NULL,
+    email TEXT,
+    service TEXT,
+    expected_value REAL DEFAULT 0,
+    status TEXT DEFAULT 'NEW'
+  )`);
+
+  // 2. Clients
+  db.run(`CREATE TABLE IF NOT EXISTS clients (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    company TEXT,
+    phone TEXT NOT NULL,
+    email TEXT,
+    gstin TEXT,
+    state TEXT DEFAULT 'Maharashtra',
+    state_code TEXT DEFAULT '27'
+  )`);
+
+  // 3. Projects
+  db.run(`CREATE TABLE IF NOT EXISTS projects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    client_name TEXT NOT NULL,
+    service TEXT,
+    budget REAL DEFAULT 0,
+    status TEXT DEFAULT 'IN_PROGRESS',
+    deadline TEXT
+  )`);
+
+  // 4. Invoices (GST Billing)
+  db.run(`CREATE TABLE IF NOT EXISTS invoices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    invoice_number TEXT UNIQUE,
+    client_name TEXT NOT NULL,
+    taxable_amount REAL NOT NULL,
+    gst_rate REAL DEFAULT 18,
+    total_tax REAL NOT NULL,
+    grand_total REAL NOT NULL,
+    status TEXT DEFAULT 'PENDING',
+    date TEXT
+  )`);
+});
+
+// --- API Endpoints ---
+
+// LEADS
+app.get('/api/leads', (req, res) => {
+  db.all('SELECT * FROM leads ORDER BY id DESC', [], (err, rows) => res.json(rows));
+});
+
+app.post('/api/leads', (req, res) => {
+  const { name, company, phone, email, service, expected_value } = req.body;
+  db.run(
+    `INSERT INTO leads (name, company, phone, email, service, expected_value) VALUES (?, ?, ?, ?, ?, ?)`,
+    [name, company, phone, email, service, expected_value || 0],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ id: this.lastID, success: true });
+    }
+  );
+});
+
+// Convert Lead -> Client
+app.post('/api/leads/:id/convert', (req, res) => {
+  db.get('SELECT * FROM leads WHERE id = ?', [req.params.id], (err, lead) => {
+    if (!lead) return res.status(404).json({ error: 'Lead not found' });
+    db.run(
+      `INSERT INTO clients (name, company, phone, email) VALUES (?, ?, ?, ?)`,
+      [lead.name, lead.company, lead.phone, lead.email],
+      function (insertErr) {
+        if (insertErr) return res.status(500).json({ error: insertErr.message });
+        db.run(`UPDATE leads SET status = 'WON' WHERE id = ?`, [req.params.id]);
+        res.json({ success: true, clientId: this.lastID });
+      }
+    );
+  });
+});
+
+// CLIENTS
+app.get('/api/clients', (req, res) => {
+  db.all('SELECT * FROM clients ORDER BY id DESC', [], (err, rows) => res.json(rows));
+});
+
+// PROJECTS
+app.get('/api/projects', (req, res) => {
+  db.all('SELECT * FROM projects ORDER BY id DESC', [], (err, rows) => res.json(rows));
+});
+
+app.post('/api/projects', (req, res) => {
+  const { title, client_name, service, budget, deadline } = req.body;
+  db.run(
+    `INSERT INTO projects (title, client_name, service, budget, deadline) VALUES (?, ?, ?, ?, ?)`,
+    [title, client_name, service, budget || 0, deadline],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ id: this.lastID, success: true });
+    }
+  );
+});
+
+// INVOICES & GST
+app.get('/api/invoices', (req, res) => {
+  db.all('SELECT * FROM invoices ORDER BY id DESC', [], (err, rows) => res.json(rows));
+});
+
+app.post('/api/invoices', (req, res) => {
+  const { client_name, taxable_amount, is_interstate } = req.body;
+  const taxable = parseFloat(taxable_amount) || 0;
+  const totalTax = (taxable * 18) / 100;
+  const grandTotal = taxable + totalTax;
+  const invNum = 'INV-' + Date.now().toString().slice(-6);
+  const today = new Date().toISOString().split('T')[0];
+
+  db.run(
+    `INSERT INTO invoices (invoice_number, client_name, taxable_amount, total_tax, grand_total, date) 
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [invNum, client_name, taxable, totalTax, grandTotal, today],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ id: this.lastID, invoice_number: invNum, grand_total: grandTotal });
+    }
+  );
+});
+
+// DASHBOARD STATS
+app.get('/api/stats', (req, res) => {
+  db.get(`SELECT 
+    (SELECT COUNT(*) FROM leads) as total_leads,
+    (SELECT COUNT(*) FROM clients) as total_clients,
+    (SELECT COUNT(*) FROM projects WHERE status = 'IN_PROGRESS') as active_projects,
+    (SELECT COALESCE(SUM(grand_total), 0) FROM invoices) as total_revenue`, [], (err, stats) => {
+      res.json(stats);
+  });
+});
+
+const PORT = 5000;
+app.listen(PORT, () => console.log(`SYNICON ERP Server running on http://localhost:${PORT}`));
